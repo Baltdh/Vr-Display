@@ -163,7 +163,19 @@ private fun VrDisplayHome(lastInput: String) {
                 }
             }
             VrInputAction.CONFIRM -> sideBySide = !sideBySide
-            else -> Unit
+            VrInputAction.UP -> profileState = profileState.withActiveSettings(
+                calibration.copy(vertical = (calibration.vertical + 0.03f).coerceIn(-1f, 1f))
+            )
+            VrInputAction.DOWN -> profileState = profileState.withActiveSettings(
+                calibration.copy(vertical = (calibration.vertical - 0.03f).coerceIn(-1f, 1f))
+            )
+            VrInputAction.LEFT -> profileState = profileState.withActiveSettings(
+                calibration.copy(horizontal = (calibration.horizontal - 0.03f).coerceIn(-1f, 1f))
+            )
+            VrInputAction.RIGHT -> profileState = profileState.withActiveSettings(
+                calibration.copy(horizontal = (calibration.horizontal + 0.03f).coerceIn(-1f, 1f))
+            )
+            null -> Unit
         }
     }
     LaunchedEffect(profileState, profilesLoaded) {

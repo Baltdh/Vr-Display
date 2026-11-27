@@ -4,7 +4,7 @@
 Android nativo, Kotlin, Jetpack Compose/Material 3; JDK 17; compileSdk 35; minSdk 26; AGP 8.7.3; Gradle 8.9; CameraX 1.4.1; ARCore 1.57.0.
 
 ## Componentes
-- UI: modos, calibração, permissões, status e diagnóstico.
+- UI: modos, calibração, permissões, status, visualizador VR imersivo e diagnóstico.
 - CameraX passthrough: aquisição de frames, orientação, throttling e composição SBS.
 - Input: KeyEvents e GenericMotionEvents, identificação de dispositivos, controle Bluetooth, teclado, mouse/trackpad OTG e joystick.
 - ARCore: disponibilidade/instalação, Session, tracking, Depth e renderer.
@@ -19,7 +19,7 @@ Android nativo, Kotlin, Jetpack Compose/Material 3; JDK 17; compileSdk 35; minSd
 6. Renderizar o frame nas duas regiões (SBS) ou em tela única.
 7. Fechar ImageProxy em finally e encerrar analyzer/executor no descarte.
 
-Duplicar o mesmo frame nos dois olhos é passthrough mono; não cria paralaxe nem profundidade binocular.
+Duplicar o mesmo frame nos dois olhos é passthrough mono; não cria paralaxe nem profundidade binocular. O modo imersivo oculta as barras do sistema via WindowInsetsControllerCompat e mantém um comando explícito de saída.
 
 ## ARCore
 O preflight de disponibilidade/instalação não constitui uma Session ativa. A Session deve respeitar lifecycle, coordenar exclusividade da câmera com CameraX, tratar instalação/permissões/indisponibilidade, encerrar no pause/stop, verificar suporte a Depth e manter fallback.

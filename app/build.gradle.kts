@@ -33,6 +33,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     val cameraX = "1.4.1"
     implementation("androidx.camera:camera-core:$cameraX")

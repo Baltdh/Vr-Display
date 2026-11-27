@@ -94,17 +94,21 @@ private fun VrDisplayHome(lastInput: String) {
             }
         }
     }
-    var calibration by remember { mutableStateOf(CalibrationSettings()) }
-    var calibrationLoaded by remember { mutableStateOf(false) }
+    var profileState by remember { mutableStateOf(CalibrationProfileState.default()) }
+    var profilesLoaded by remember { mutableStateOf(false) }
+    var profileMenuExpanded by remember { mutableStateOf(false) }
+    var showCreateProfile by remember { mutableStateOf(false) }
+    var profileNameDraft by remember { mutableStateOf("") }
+    val calibration = profileState.activeProfile.settings
 
     LaunchedEffect(context) {
-        calibration = CalibrationSettingsStore.observe(context).first()
-        calibrationLoaded = true
+        profileState = CalibrationSettingsStore.observe(context).first()
+        profilesLoaded = true
     }
-    LaunchedEffect(calibration, calibrationLoaded) {
-        if (calibrationLoaded) {
+    LaunchedEffect(profileState, profilesLoaded) {
+        if (profilesLoaded) {
             delay(350)
-            CalibrationSettingsStore.save(context, calibration)
+            CalibrationSettingsStore.save(context, profileState)
         }
     }
 
@@ -156,37 +160,68 @@ private fun VrDisplayHome(lastInput: String) {
         }
         Spacer(Modifier.height(18.dp))
         Text("Calibração óptica", style = MaterialTheme.typography.titleLarge)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box {
+                TextButton(onClick = { profileMenuExpanded = true }) {
+                    Text("Perfil: " + profileState.activeProfile.name)
+                }
+                DropdownMenu(
+                    expanded = profileMenuExpanded,
+                    onDismissRequest = { profileMenuExpanded = false }
+                ) {
+                    profileState.profiles.forEach { profile ->
+                        DropdownMenuItem(
+                            text = { Text(profile.name) },
+                            onClick = {
+                                profileState = profileState.selectProfile(profile.id)
+                                profileMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            OutlinedButton(
+                enabled = profileState.profiles.size < CalibrationProfileState.MAX_PROFILES,
+                onClick = {
+                    profileNameDraft = ""
+                    showCreateProfile = true
+                }
+            ) { Text("Novo perfil") }
+        }
         Text("Separação visual / IPD: " + (calibration.ipd * 100).toInt() + "%")
         Slider(
             value = calibration.ipd,
-            onValueChange = { calibration = calibration.copy(ipd = it) }
+            onValueChange = { profileState = profileState.withActiveSettings(calibration.copy(ipd = it)) }
         )
         Text("Zoom: " + "%.2fx".format(calibration.zoom))
         Slider(
             value = calibration.zoom,
-            onValueChange = { calibration = calibration.copy(zoom = it) },
+            onValueChange = { profileState = profileState.withActiveSettings(calibration.copy(zoom = it)) },
             valueRange = 0.7f..2.5f
         )
         Text("Deslocamento horizontal: " + "%.2f".format(calibration.horizontal))
         Slider(
             value = calibration.horizontal,
-            onValueChange = { calibration = calibration.copy(horizontal = it) },
+            onValueChange = { profileState = profileState.withActiveSettings(calibration.copy(horizontal = it)) },
             valueRange = -1f..1f
         )
         Text("Deslocamento vertical: " + "%.2f".format(calibration.vertical))
         Slider(
             value = calibration.vertical,
-            onValueChange = { calibration = calibration.copy(vertical = it) },
+            onValueChange = { profileState = profileState.withActiveSettings(calibration.copy(vertical = it)) },
             valueRange = -1f..1f
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
-                onClick = { calibration = calibration.copy(rotation = (calibration.rotation + 90) % 360) }
+                onClick = { profileState = profileState.withActiveSettings(calibration.copy(rotation = (calibration.rotation + 90) % 360)) }
             ) { Text("Rotação: " + calibration.rotation + "°") }
-            TextButton(onClick = { calibration = CalibrationSettings() }) { Text("Redefinir") }
+            TextButton(onClick = { profileState = profileState.withActiveSettings(CalibrationSettings()) }) { Text("Redefinir perfil") }
         }
         Text(
-            "Os ajustes são salvos automaticamente neste aparelho.",
+            "Cada perfil mantém seus próprios ajustes e é salvo automaticamente neste aparelho.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.secondary
         )
@@ -202,5 +237,36 @@ private fun VrDisplayHome(lastInput: String) {
             color = MaterialTheme.colorScheme.secondary,
             style = MaterialTheme.typography.bodySmall
         )
+        if (showCreateProfile) {
+            val cleanName = profileNameDraft.trim()
+            val canCreate = cleanName.isNotEmpty() &&
+                profileState.profiles.none { it.name.equals(cleanName, ignoreCase = true) } &&
+                profileState.profiles.size < CalibrationProfileState.MAX_PROFILES
+            AlertDialog(
+                onDismissRequest = { showCreateProfile = false },
+                title = { Text("Novo perfil de headset") },
+                text = {
+                    OutlinedTextField(
+                        value = profileNameDraft,
+                        onValueChange = { profileNameDraft = it },
+                        label = { Text("Nome do perfil") },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        enabled = canCreate,
+                        onClick = {
+                            profileState = profileState.addProfile(cleanName)
+                            showCreateProfile = false
+                            profileNameDraft = ""
+                        }
+                    ) { Text("Salvar") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCreateProfile = false }) { Text("Cancelar") }
+                }
+            )
+        }
     }
 }

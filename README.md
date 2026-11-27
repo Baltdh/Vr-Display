@@ -1,77 +1,266 @@
 # Vr-Display
 
-Aplicativo Android para transformar um smartphone comum em uma central de visualização VR/AR para headsets simples do tipo VR Box / Google Cardboard.
+Aplicativo Android nativo para transformar um smartphone em uma central VR/AR para headsets simples VR Box / Google Cardboard, sem root.
 
-## Dispositivo inicial de validação
-- Motorola Moto G52
-- Android 13
-- Headset VR Box com lente dupla
-- Controle Bluetooth branco
-- Mouse e teclado via USB OTG (incluindo receptores sem fio)
+**Repositório oficial atual:** `Baltdh/Vr-Display`  
+**Branch de desenvolvimento atual:** `feature/restore-project`  
+**Aparelho inicial de validação:** Motorola Moto G52, Android 13.
 
-## Objetivo
-Construir uma aplicação Android nativa, sem root, que inicie como qualquer aplicativo Android e ofereça:
-- visualização em tela única e modo VR lado a lado (SBS);
-- câmera frontal ou traseira como passthrough, duplicada para as duas lentes;
-- ajustes ópticos persistentes: separação/IPD visual, zoom, deslocamentos horizontal/vertical e rotação;
-- diagnóstico e mapeamento de controle Bluetooth por eventos de tecla;
-- compatibilidade com mouse e teclado USB OTG;
-- evolução para ARCore, tracking espacial, Depth API e painéis espaciais;
-- interface para abrir conteúdo Android em painéis quando as APIs e as políticas do sistema permitirem.
+## 1. Visão do produto
 
-## Estado da implementação restaurada
-O repositório anterior `Baltdh/VrBox-Display` foi excluído e não está disponível para recuperar seus arquivos-fonte pela integração atual. Esta nova base será reconstruída a partir do histórico técnico e das decisões documentadas durante o desenvolvimento anterior. Os recursos são separados entre implementação presente nesta base e etapas planejadas. Não presumir que o código antigo foi copiado byte a byte.
+O aplicativo deve permitir que o celular seja usado normalmente como fonte de imagem e controle, enquanto o headset VR Box funciona como visualizador óptico. O app precisa oferecer:
 
-### Nesta restauração
-- documentação de arquitetura e continuidade;
-- estrutura Android/Kotlin/Jetpack Compose e pipeline CameraX SBS a ser restaurado;
-- calibração e diagnóstico de controles a serem reintroduzidos;
-- preflight ARCore a ser reintroduzido.
+- modo de tela única e modo VR lado a lado (SBS);
+- passthrough usando câmera frontal ou traseira;
+- calibração da imagem para ajustar o encaixe nas lentes;
+- suporte a controle Bluetooth, teclado e mouse USB OTG;
+- visualização de conteúdo Android em painéis, quando as APIs públicas permitirem;
+- evolução para experiências AR com ARCore, tracking espacial e Depth API;
+- interface simples, com permissões contextuais, indicação de câmera ativa e saída rápida.
 
-### Ainda exige implementação/validação
-- persistência dos ajustes e perfis (os controles atuais ainda ficam em memória);
-- seleção completa de câmera e tratamento de lifecycle em todos os cenários;
-- medição de desempenho no Moto G52 e otimização GPU/OpenGL;
-- criação de sessão ARCore, tracking e renderização 3D;
-- Depth API;
-- integração de apps de terceiros em painéis (sujeita às limitações do Android);
-- mapeamento configurável de todos os botões/controles;
-- testes físicos e APK de distribuição.
+A experiência deve funcionar em aparelhos Android comuns, com recursos opcionais ativados conforme a compatibilidade do dispositivo.
 
-## Arquitetura e documentação
-- [Arquitetura técnica](docs/ARCHITECTURE.md)
-- [Guia de continuidade para agentes](AGENTS.md)
+## 2. Histórico e restauração
 
-## Requisitos
-- Android Studio recente, JDK 17, Android SDK Platform 35
-- Gradle 8.9 no CI
-- Dispositivo/emulador Android API 26 ou superior
+O repositório anterior `Baltdh/VrBox-Display` foi excluído. Seus arquivos-fonte não estão disponíveis para recuperação pela integração atual. A implementação presente neste repositório é uma **reconstrução baseada no histórico técnico, decisões e requisitos registrados durante o desenvolvimento**, não uma cópia literal dos commits ou arquivos antigos.
 
-## Build
-No Android Studio: abrir a pasta do projeto e sincronizar Gradle.
-Pela linha de comando, com Gradle instalado:
+O agente que assumir o projeto deve preservar essa distinção e não inventar testes ou funcionalidades que não estejam comprovados.
+
+## 3. Estado atual do código
+
+### Implementado na base restaurada
+
+- Projeto Android com Kotlin, Jetpack Compose e Material 3.
+- Tela inicial com alternância entre SBS e tela única.
+- Seleção inicial entre câmera frontal e traseira.
+- Controles visuais iniciais de separação, zoom, deslocamento horizontal/vertical e rotação.
+- Pipeline CameraX com ImageAnalysis, estratégia `KEEP_ONLY_LATEST`, resolução-alvo 640×480, correção de rotação e limitação aproximada da atualização a 15 fps.
+- Composição do mesmo frame nas duas regiões SBS.
+- Diagnóstico inicial de eventos de tecla para controle Bluetooth e teclado.
+- Painel de verificação de disponibilidade e solicitação de instalação do ARCore.
+- Workflow GitHub Actions para compilar APK debug.
+- Documentação de arquitetura e instruções para agentes.
+
+### Parcial, provisório ou ainda não validado
+
+- Os ajustes ópticos atuais são estado de interface; ainda precisam de persistência e perfis.
+- A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
+- O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
+- O painel ARCore é somente preflight. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
+- Diagnóstico de KeyEvents não é ainda um sistema completo de mapeamento configurável.
+- Teclado e mouse OTG dependem dos eventos Android padrão; ainda precisam de testes físicos.
+- Não há ainda um sistema de painéis capaz de hospedar livremente qualquer aplicativo Android.
+- Não há validação física confirmada nem APK de distribuição aprovado.
+
+**Atenção:** build verde no CI prova que o código compila no ambiente do GitHub; não prova funcionamento no Moto G52.
+
+## 4. Plano de desenvolvimento por etapas
+
+O plano abaixo define a ordem de trabalho. O agente deve concluir e validar cada etapa antes de avançar para a seguinte, salvo correções pequenas que sejam pré-requisito.
+
+### Fase 0 — Integridade da base e build reproduzível
+
+Objetivo: garantir que qualquer colaborador consiga clonar, abrir e compilar o projeto.
+
+Tarefas:
+1. Conferir estrutura Gradle, Manifest, namespace, applicationId e versões.
+2. Executar `gradle :app:assembleDebug` no CI.
+3. Corrigir erros de compilação e avisos relevantes.
+4. Confirmar que o artifact `vr-display-debug-apk` foi gerado para o commit correto.
+5. Registrar no README o resultado e o SHA testado.
+
+Critério de conclusão: build verde e APK debug disponível como artifact do workflow. Não confundir isso com teste físico.
+
+### Fase 1 — Câmera e visualização SBS estáveis
+
+Objetivo: tornar o passthrough previsível e seguro.
+
+Tarefas:
+1. Revisar CameraX e o ciclo de vida de `ProcessCameraProvider`, `ImageAnalysis` e executor.
+2. Garantir fechamento de todo `ImageProxy` em `finally`.
+3. Encerrar somente os use cases pertencentes ao painel; evitar `unbindAll()` indiscriminado.
+4. Tratar falha de câmera, permissão negada, ausência de câmera frontal e troca de lente.
+5. Testar abrir/fechar repetidamente, pause/resume, troca frontal/traseira e retorno de configurações.
+6. Corrigir enquadramento, proporção, rotação e recorte sem distorção inesperada.
+7. Verificar a separação entre as duas imagens e manter o modo tela única como fallback.
+
+Critério de conclusão: fluxo sem crash ou vazamento aparente nos cenários de lifecycle, com comportamento documentado em emulador e, posteriormente, no aparelho físico.
+
+### Fase 2 — Calibração óptica e perfis
+
+Objetivo: adaptar a imagem a diferentes headsets, lentes e usuários.
+
+Controles previstos:
+- distância/separação visual entre as duas regiões;
+- escala/zoom;
+- deslocamento horizontal e vertical;
+- rotação;
+- recorte e proporção;
+- correção de distorção óptica, caso seja tecnicamente viável;
+- brilho e controles de visualização necessários.
+
+Tarefas:
+1. Separar estado de interface da configuração de renderização.
+2. Persistir preferências com DataStore.
+3. Criar perfis nomeados de headset e permitir restaurar padrão.
+4. Definir limites e passos úteis para cada ajuste.
+5. Adicionar uma tela de calibração com padrões geométricos e texto para alinhamento.
+6. Documentar quais parâmetros são aproximações e quais representam medidas físicas.
+
+Critério de conclusão: configurações sobrevivem ao fechamento do app e os perfis podem ser criados, selecionados, editados e redefinidos.
+
+### Fase 3 — Controles Bluetooth, teclado e mouse OTG
+
+Objetivo: permitir operação sem tocar no celular dentro do headset.
+
+Tarefas:
+1. Mapear KeyEvents: keyCode, scanCode, ação, repetição e dispositivo de origem.
+2. Criar tela de diagnóstico com leitura em tempo real.
+3. Implementar mapeamento configurável para ações do app.
+4. Suportar navegação por D-pad, confirmação, voltar, gatilhos e botões disponíveis.
+5. Detectar teclado e mouse por eventos padrão do Android.
+6. Oferecer sensibilidade, zonas mortas e opção de redefinir mapeamentos.
+7. Evitar interceptar teclas necessárias ao sistema e manter acessibilidade.
+
+Critério de conclusão: controle Bluetooth, teclado e mouse OTG testados no aparelho-alvo, com mapa de botões documentado. Não presumir que todos os controles usam os mesmos códigos.
+
+### Fase 4 — Desempenho e renderer gráfico
+
+Objetivo: reduzir latência, uso de CPU e aquecimento.
+
+Tarefas:
+1. Medir resolução, FPS real, latência aproximada, CPU, memória e temperatura.
+2. Registrar medições com a implementação Bitmap atual como baseline.
+3. Investigar SurfaceTexture, OpenGL ES ou pipeline GPU equivalente.
+4. Implementar renderer separado da UI Compose, se os dados justificarem.
+5. Evitar conversões Bitmap desnecessárias e cópias de frame.
+6. Manter fallback funcional para aparelhos sem suporte ao caminho acelerado.
+7. Comparar qualidade, estabilidade e consumo antes/depois.
+
+Critério de conclusão: medições reproduzíveis e melhoria comprovada sem regressão de qualidade ou estabilidade no aparelho-alvo.
+
+### Fase 5 — ARCore: Session, tracking e Depth
+
+Objetivo: evoluir do passthrough simples para experiência AR espacial.
+
+Tarefas:
+1. Verificar compatibilidade real com ARCore em runtime.
+2. Implementar fluxo de instalação/atualização e tratamento de indisponibilidade.
+3. Criar gerenciador explícito de posse da câmera para alternar CameraX e ARCore sem concorrência.
+4. Implementar Session ligada ao lifecycle da Activity.
+5. Adicionar tracking de movimento e pose da câmera.
+6. Implementar renderer para objetos e planos virtuais.
+7. Verificar suporte a Depth antes de habilitar a API e oferecer fallback.
+8. Tratar perda de tracking, pausa, retomada, mudança de configuração e encerramento.
+9. Testar no Moto G52; não presumir que suporte listado significa que todos os recursos estão ativos em qualquer versão.
+
+Critério de conclusão: sessão real funcionando, tracking demonstrado e Depth habilitado somente quando suportado. O painel de preflight isoladamente não satisfaz esta fase.
+
+### Fase 6 — Painéis de conteúdo Android e experiência espacial
+
+Objetivo: exibir conteúdo e ferramentas Android em uma interface espacial.
+
+Investigar e implementar apenas caminhos suportados:
+1. Painéis próprios do Vr-Display para navegador, mídia local, configurações e ferramentas internas.
+2. MediaProjection para captura autorizada pelo usuário, com foreground service e indicador visível.
+3. Controles de início/parada e tratamento de apps que bloqueiam captura.
+4. Integrações específicas com intents e APIs públicas quando apropriado.
+5. Avaliar multi-window/freeform conforme versão Android e suporte do fabricante.
+6. Organizar painéis em posições e tamanhos configuráveis quando tracking espacial estiver disponível.
+
+Critério de conclusão: cada tipo de painel tem escopo e limitações documentados, consentimento respeitado e teste independente.
+
+### Fase 7 — Experiência final, testes e distribuição
+
+Objetivo: preparar uma versão estável para uso cotidiano.
+
+Tarefas:
+1. Revisar acessibilidade, textos, estados vazios, erros e permissões.
+2. Testar instalação limpa, atualização, rotação, pause/resume e encerramento.
+3. Testar os modos VR, passthrough, controles e AR nos aparelhos compatíveis.
+4. Criar checklist de regressão.
+5. Gerar APK debug para testes e, quando autorizado, APK release assinado.
+6. Documentar instalação, requisitos, compatibilidade e limitações.
+7. Não publicar release nem alterar visibilidade do repositório sem autorização explícita.
+
+Critério de conclusão: checklist aprovado, problemas conhecidos registrados e artefato correspondente ao commit final disponível.
+
+## 5. Regras técnicas e limites de plataforma
+
+- Não exigir root.
+- A câmera só inicia após ação explícita e permissão concedida.
+- Exibir indicação clara de câmera ativa e opção de fechar imediatamente.
+- Não coletar nem transmitir imagens sem uma função explicitamente autorizada.
+- Uma câmera mono duplicada nos dois olhos continua sendo imagem mono; não cria paralaxe nem estereoscopia real.
+- ARCore Depth estima profundidade; não equivale a duas câmeras estéreo.
+- CameraX e ARCore podem disputar a câmera e precisam de coordenação explícita.
+- MediaProjection exige consentimento do usuário e foreground service; conteúdo protegido por DRM ou `FLAG_SECURE` pode impedir captura.
+- Um app Android comum não pode incorporar arbitrariamente qualquer Activity de terceiros em uma janela 3D.
+- Não prometer suporte universal a painéis externos; documentar dependências de versão Android, fabricante e permissões.
+
+## 6. Tecnologias e ambiente
+
+- Kotlin
+- Jetpack Compose e Material 3
+- Android Gradle Plugin 8.7.3
+- Gradle 8.9
+- JDK 17
+- compileSdk 35
+- minSdk 26
+- CameraX 1.4.1
+- ARCore 1.57.0
+
+Build local:
 ```bash
 gradle :app:assembleDebug
 ```
-O APK debug, quando a compilação terminar com sucesso, fica em `app/build/outputs/apk/debug/app-debug.apk`.
 
-## Segurança e privacidade
-A câmera só deve ser iniciada após ação explícita do usuário e concessão da permissão. A interface deve indicar quando a câmera estiver ativa e oferecer saída imediata. Não coletar nem transmitir imagens.
+APK debug, após build bem-sucedido:
+`app/build/outputs/apk/debug/app-debug.apk`
 
-## Limites técnicos
-- Não exigir root.
-- Não iniciar captura de tela global silenciosamente.
-- Não prometer que qualquer aplicativo Android poderá ser incorporado em uma janela VR: MediaProjection exige consentimento e alguns apps bloqueiam captura; Activity embedding e janelas livres dependem do suporte do Android/OEM.
-- Uma única câmera duplicada nas duas lentes produz imagem binocular idêntica (mono duplicado), não profundidade estereoscópica real.
-- ARCore Depth estima profundidade; não equivale a duas câmeras estéreo.
-- CameraX e ARCore podem disputar a câmera. Os modos devem ser mutuamente exclusivos ou coordenados por um gerenciador de câmera.
-- Não declarar teste físico concluído sem evidência no aparelho.
+O workflow do GitHub Actions executa o build e publica o artifact `vr-display-debug-apk` por 7 dias.
 
-## Fluxo de trabalho
-1. Ler README, `AGENTS.md` e `docs/ARCHITECTURE.md` antes de alterar código.
-2. Inspecionar branch, fontes e workflows.
-3. Fazer mudanças pequenas, executar build/testes e atualizar documentação.
-4. Só indicar APK depois de confirmar build verde e artifact do commit correspondente.
+## 7. Instruções para o próximo agente de IA
 
-## CI
-O workflow Android deverá executar `assembleDebug` em push e pull request. Build verde comprova compilação no CI, não funcionamento físico no Moto G52.
+O agente deve atuar como colaborador técnico contínuo, não como gerador de uma implementação descartável.
+
+1. Antes de editar, leia este README, `AGENTS.md` e `docs/ARCHITECTURE.md`.
+2. Verifique a branch atual, HEAD, status do CI e arquivos existentes.
+3. Trabalhe preferencialmente em branch de feature; não faça mudanças diretas em `main` sem necessidade e autorização.
+4. Não recrie arquivos que já existem sem antes inspecioná-los.
+5. Preserve funcionalidades e decisões confirmadas; não substitua código por placeholders.
+6. Divida o trabalho em commits pequenos e com mensagens claras.
+7. Antes de usar APIs Android/ARCore, confira a documentação oficial e a compatibilidade com as versões do projeto.
+8. Execute build e testes pertinentes depois de cada conjunto de mudanças.
+9. Analise logs reais do CI; não deduza sucesso apenas porque o workflow iniciou.
+10. Atualize este README, `AGENTS.md` ou `docs/ARCHITECTURE.md` sempre que o estado, a arquitetura ou o plano mudar.
+11. Relate claramente o que foi implementado, o que compilou, o que foi testado em emulador e o que foi testado fisicamente.
+12. Não declarar o Moto G52 validado sem teste real confirmado.
+13. Não publicar Release, trocar a visibilidade do repositório ou remover funcionalidades sem autorização do proprietário.
+
+### Formato recomendado de relatório por etapa
+
+- **Objetivo:** qual problema foi tratado.
+- **Arquivos:** quais foram criados ou alterados.
+- **Implementação:** o que mudou tecnicamente.
+- **Validação:** build, testes e logs consultados.
+- **Resultado:** concluído, parcial ou bloqueado.
+- **Riscos/limitações:** o que ainda precisa ser verificado.
+- **Próxima tarefa:** menor próximo incremento útil.
+
+## 8. Documentação complementar
+
+- [Guia de continuidade para agentes](AGENTS.md)
+- [Arquitetura técnica](docs/ARCHITECTURE.md)
+- [Código-fonte](app/src/main/java/com/baltdh/vrdisplay/)
+- [GitHub Actions](.github/workflows/android.yml)
+
+## 9. Estado de validação
+
+A validação deve sempre ser atualizada com evidências do commit correspondente:
+- **Código presente:** verificar os arquivos da branch.
+- **Build:** verificar execução concluída com sucesso no SHA exato.
+- **APK:** verificar artifact anexado ao workflow desse SHA.
+- **Teste físico:** registrar aparelho, versão Android, cenário e resultado observado.
+
+Não apresentar nenhum desses níveis como equivalente aos demais.

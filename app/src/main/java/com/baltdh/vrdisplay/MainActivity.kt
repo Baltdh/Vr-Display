@@ -12,7 +12,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
     private var lastKey by mutableStateOf("Nenhum evento recebido")
@@ -35,14 +38,23 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun VrDisplayHome(lastKey: String) {
+    val context = LocalContext.current.applicationContext
     var cameraVisible by remember { mutableStateOf(false) }
     var sideBySide by remember { mutableStateOf(true) }
     var frontCamera by remember { mutableStateOf(false) }
-    var ipd by remember { mutableFloatStateOf(0.5f) }
-    var zoom by remember { mutableFloatStateOf(1f) }
-    var horizontal by remember { mutableFloatStateOf(0f) }
-    var vertical by remember { mutableFloatStateOf(0f) }
-    var rotation by remember { mutableIntStateOf(0) }
+    var calibration by remember { mutableStateOf(CalibrationSettings()) }
+    var calibrationLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(context) {
+        calibration = CalibrationSettingsStore.observe(context).first()
+        calibrationLoaded = true
+    }
+    LaunchedEffect(calibration, calibrationLoaded) {
+        if (calibrationLoaded) {
+            delay(350)
+            CalibrationSettingsStore.save(context, calibration)
+        }
+    }
 
     val cameraPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -59,22 +71,47 @@ private fun VrDisplayHome(lastKey: String) {
         }
         if (cameraVisible) {
             Spacer(Modifier.height(12.dp))
-            CameraPreviewPanel(sideBySide, frontCamera, ipd, zoom, horizontal, vertical, rotation) { cameraVisible = false }
+            CameraPreviewPanel(
+                sideBySide, frontCamera, calibration.ipd, calibration.zoom,
+                calibration.horizontal, calibration.vertical, calibration.rotation
+            ) { cameraVisible = false }
         }
         Spacer(Modifier.height(18.dp))
         Text("Calibração óptica", style = MaterialTheme.typography.titleLarge)
-        Text("Separação visual / IPD: " + (ipd * 100).toInt() + "%")
-        Slider(value = ipd, onValueChange = { ipd = it })
-        Text("Zoom: " + "%.2fx".format(zoom))
-        Slider(value = zoom, onValueChange = { zoom = it }, valueRange = 0.7f..2.5f)
-        Text("Deslocamento horizontal: " + "%.2f".format(horizontal))
-        Slider(value = horizontal, onValueChange = { horizontal = it }, valueRange = -1f..1f)
-        Text("Deslocamento vertical: " + "%.2f".format(vertical))
-        Slider(value = vertical, onValueChange = { vertical = it }, valueRange = -1f..1f)
+        Text("Separação visual / IPD: " + (calibration.ipd * 100).toInt() + "%")
+        Slider(
+            value = calibration.ipd,
+            onValueChange = { calibration = calibration.copy(ipd = it) }
+        )
+        Text("Zoom: " + "%.2fx".format(calibration.zoom))
+        Slider(
+            value = calibration.zoom,
+            onValueChange = { calibration = calibration.copy(zoom = it) },
+            valueRange = 0.7f..2.5f
+        )
+        Text("Deslocamento horizontal: " + "%.2f".format(calibration.horizontal))
+        Slider(
+            value = calibration.horizontal,
+            onValueChange = { calibration = calibration.copy(horizontal = it) },
+            valueRange = -1f..1f
+        )
+        Text("Deslocamento vertical: " + "%.2f".format(calibration.vertical))
+        Slider(
+            value = calibration.vertical,
+            onValueChange = { calibration = calibration.copy(vertical = it) },
+            valueRange = -1f..1f
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { rotation = (rotation + 90) % 360 }) { Text("Rotação: " + rotation + "°") }
-            TextButton(onClick = { ipd = .5f; zoom = 1f; horizontal = 0f; vertical = 0f; rotation = 0 }) { Text("Redefinir") }
+            OutlinedButton(
+                onClick = { calibration = calibration.copy(rotation = (calibration.rotation + 90) % 360) }
+            ) { Text("Rotação: " + calibration.rotation + "°") }
+            TextButton(onClick = { calibration = CalibrationSettings() }) { Text("Redefinir") }
         }
+        Text(
+            "Os ajustes são salvos automaticamente neste aparelho.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.secondary
+        )
         Spacer(Modifier.height(16.dp))
         Text("Diagnóstico do controle", style = MaterialTheme.typography.titleLarge)
         Text(lastKey, style = MaterialTheme.typography.bodyMedium)

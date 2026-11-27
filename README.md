@@ -34,7 +34,8 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - Tela inicial com alternância entre SBS e tela única.
 - Visualizador de câmera em tela cheia para VR, com ocultação das barras do sistema e saída explícita.
 - Seleção inicial entre câmera frontal e traseira.
-- Controles visuais iniciais de separação, zoom, deslocamento horizontal/vertical e rotação.
+- Controles visuais de separação, zoom, deslocamento horizontal/vertical e rotação.
+- Criação e seleção de até 20 perfis nomeados de calibração, com valores independentes e persistência local.
 - Pipeline CameraX com ImageAnalysis, estratégia `KEEP_ONLY_LATEST`, resolução-alvo 640×480, correção de rotação e limitação aproximada da atualização a 15 fps.
 - Composição do mesmo frame nas duas regiões SBS.
 - Diagnóstico de eventos KeyEvent para controle Bluetooth/teclado e GenericMotionEvent para mouse/trackpad/joystick, com identificação do dispositivo, origem e throttling de movimento.
@@ -44,7 +45,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 
 ### Parcial, provisório ou ainda não validado
 
-- Os ajustes ópticos são persistidos localmente com Preferences DataStore; perfis nomeados de headset ainda não foram implementados.
+- Os ajustes ópticos e até 20 perfis nomeados de headset são persistidos localmente com Preferences DataStore.
 - A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
 - O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
 - O painel ARCore é somente preflight. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.

@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
     var mappedActionEvent by mutableStateOf<Pair<VrInputAction, Long>?>(null)
         private set
     private var mappedEventSequence = 0L
+    private var capturedKeyCode: Int? = null
 
     fun armInputMapping(action: VrInputAction) {
         pendingMappingAction = action
@@ -60,11 +61,16 @@ class MainActivity : ComponentActivity() {
         if (event.action == KeyEvent.ACTION_DOWN && pending != null) {
             inputMappings = inputMappings.withKey(pending, event.keyCode)
             pendingMappingAction = null
+            capturedKeyCode = event.keyCode
             lastInput = "Mapeado • ${pending.label} = ${inputKeyLabel(event.keyCode)} • device=$device"
             return true
         }
+        if (capturedKeyCode == event.keyCode) {
+            if (event.action == KeyEvent.ACTION_UP) capturedKeyCode = null
+            return true
+        }
         val mapped = inputMappings.actionFor(event.keyCode)
-        if (event.action == KeyEvent.ACTION_DOWN && mapped != null) {
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0 && mapped != null) {
             mappedEventSequence += 1
             mappedActionEvent = mapped to mappedEventSequence
         }

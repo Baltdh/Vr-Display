@@ -310,7 +310,7 @@ O agente deve atuar como colaborador técnico contínuo, não como gerador de um
 
 ### Registro da validação atual — 2026-11-27
 
-- Foi adicionada persistência local dos cinco parâmetros de calibração (separação visual, zoom, deslocamentos horizontal/vertical e rotação), com gravação debounced para evitar escrita a cada movimento do slider. O commit `2fc06c7faf38f9aa355e649658c6ceb8e33d8750` compilou com sucesso e gerou o artifact `vr-display-debug-apk` (ID 15182439050; SHA-256 `bede9666158f16514d123ed7eb90e0664e1a070d2c247b08edda5f39dd45c52b`).
+- Foi adicionada persistência local dos cinco parâmetros de calibração (separação visual, zoom, deslocamentos horizontal/vertical e rotação), com gravação debounced para evitar escrita a cada movimento do slider. O commit `2fc06c7faf38f9aa355e649658c6ceb8e33d8750` compilou com sucesso e gerou o artifact `vr-display-debug-apk` (ID 15182439050; SHA-256 `bede9666158f16514d123ed7eb90e0664e1a070d2c247b08edda5f39dd45c52b`). Foram adicionados testes unitários de defaults e normalização; o workflow agora executa `testDebugUnitTest` antes de gerar o APK.
 
 - O commit `aa14e2e5abe4e9a89f476a3e6aa07d00afee3328` concluiu o GitHub Actions com sucesso e gerou `vr-display-debug-apk` (artifact 15181594625; SHA-256 `026ae60b5c7b79e37160ac497c99c1b20301f35ef89baf064115ed69cf21b6a2`). Esse build valida somente aquele commit.
 - Após a confirmação do build, `CameraPreview.kt` recebeu uma revisão do lifecycle: descarte sinalizado atomicamente, descarte do analyzer, desvinculação apenas do use case do painel, atualização de UI protegida contra callbacks tardios e throttling com relógio monotônico. A validação CI dessa revisão ainda está pendente.

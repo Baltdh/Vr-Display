@@ -63,3 +63,8 @@ A implementação atual do painel usa `AtomicBoolean` para sinalizar descarte en
 ## Persistência de calibração
 
 `CalibrationSettings` é o modelo único dos cinco ajustes ópticos. `CalibrationSettingsStore` lê e grava esses valores com Preferences DataStore no armazenamento privado do app. A UI carrega o estado salvo uma vez e grava alterações após uma pausa curta (debounce de 350 ms), evitando operações de escrita em cada evento do slider. Os valores são normalizados dentro dos limites aceitos antes de persistir. Perfis nomeados e sincronização não fazem parte desta implementação.
+
+
+## Testes automatizados
+
+`CalibrationSettingsTest` verifica os valores padrão, limites aceitos e normalização da rotação. O workflow Android CI executa `:app:testDebugUnitTest` antes de `:app:assembleDebug`, de modo que regressões do modelo de calibração bloqueiem a geração do APK.

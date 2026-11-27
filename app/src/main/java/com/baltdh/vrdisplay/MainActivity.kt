@@ -6,6 +6,7 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -82,6 +83,7 @@ private fun VrDisplayHome(lastInput: String) {
     SideEffect {
         val window = activity?.window
         if (window != null) {
+            WindowCompat.setDecorFitsSystemWindows(window, !immersiveMode)
             val controller = WindowCompat.getInsetsController(window, window.decorView)
             if (immersiveMode) {
                 controller.systemBarsBehavior =
@@ -104,6 +106,11 @@ private fun VrDisplayHome(lastInput: String) {
             delay(350)
             CalibrationSettingsStore.save(context, calibration)
         }
+    }
+
+    BackHandler(enabled = immersiveMode) {
+        cameraVisible = false
+        immersiveMode = false
     }
 
     val cameraPermission = rememberLauncherForActivityResult(

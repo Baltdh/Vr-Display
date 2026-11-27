@@ -29,3 +29,20 @@ MediaProjection exige autorização explícita e possui restrições. DRM/FLAG_S
 
 ## Desempenho
 Bitmap é uma etapa inicial, não a arquitetura final. Medir no Moto G52 resolução, FPS, latência, CPU, memória e temperatura antes de migrar para OpenGL/SurfaceTexture ou pipeline GPU.
+
+
+## Plataforma futura de jogos VR (roadmap)
+
+O produto poderá evoluir para uma plataforma de jogos inspirada na Steam, com biblioteca/launcher local, loja online, runtime de jogos e ferramenta de criação integrada ao app. Esta camada é futura e não deve comprometer as prioridades do visualizador VR/AR.
+
+Componentes arquiteturais previstos:
+- **Game Library:** catálogo local, metadados, favoritos, versões e estado de instalação.
+- **Game Package:** formato versionado com manifesto, assets, requisitos de runtime, controles e permissões declaradas.
+- **Game Runtime:** execução isolada com APIs limitadas de gráficos, áudio, input, armazenamento e recursos VR/AR.
+- **Creator Studio:** editor visual de cenas, objetos, interações e lógica simples; preview em tela única/SBS; salvar, testar e exportar projetos.
+- **Store Client:** catálogo remoto, contas, download/atualização, canais beta/estável, avaliações e páginas de desenvolvedor.
+- **Backend:** autenticação/autorização, distribuição de pacotes, moderação, métricas minimizadas e proteção contra abuso.
+
+Segurança obrigatória: pacotes assinados, hash verificado, permissões explícitas, sandbox, limites de recursos e ausência de execução nativa arbitrária por padrão. Compras e pagamentos exigem análise posterior das regras legais, fiscais e das políticas de distribuição.
+
+Ordem recomendada: estabilizar fases 0–4; prototipar formato de pacote e runtime; desenvolver criador e biblioteca local; só depois desenvolver contas, backend, loja online, publicação e moderação. Consultar a Fase 8 do README para o escopo detalhado.

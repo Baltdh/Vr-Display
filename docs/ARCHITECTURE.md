@@ -58,3 +58,8 @@ O primeiro protótipo será offline: criar uma sala, adicionar/transformar objet
 ## Revisão do lifecycle CameraX — 2026-11-27
 
 A implementação atual do painel usa `AtomicBoolean` para sinalizar descarte entre a thread principal e o executor do analyzer. Atualizações de frame/erro são encaminhadas ao executor principal e ignoradas após descarte. No encerramento, o analyzer é limpo, somente o `ImageAnalysis` do painel é desvinculado e o executor é encerrado. O throttling usa `SystemClock.elapsedRealtime()` para não depender de alterações no relógio civil. A revisão aguarda build CI e teste físico; ela não comprova ainda ausência de vazamentos nem estabilidade no Moto G52.
+
+
+## Persistência de calibração
+
+`CalibrationSettings` é o modelo único dos cinco ajustes ópticos. `CalibrationSettingsStore` lê e grava esses valores com Preferences DataStore no armazenamento privado do app. A UI carrega o estado salvo uma vez e grava alterações após uma pausa curta (debounce de 350 ms), evitando operações de escrita em cada evento do slider. Os valores são normalizados dentro dos limites aceitos antes de persistir. Perfis nomeados e sincronização não fazem parte desta implementação.

@@ -54,7 +54,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - Não há ainda um sistema de painéis capaz de hospedar livremente qualquer aplicativo Android.
 - Não há validação física confirmada nem APK de distribuição aprovado.
 
-**Atenção:** build verde no CI prova que o código compila no ambiente do GitHub; não prova funcionamento no Moto G52.
+**Atenção:** build verde no CI e testes unitários aprovados provam compilação e regras de modelo testadas no ambiente do GitHub; não provam funcionamento físico da câmera, controles, perfis ou latência no Moto G52.
 
 ## 4. Plano de desenvolvimento por etapas
 
@@ -321,6 +321,7 @@ O agente deve atuar como colaborador técnico contínuo, não como gerador de um
 - Um build anterior da base restaurada concluiu com sucesso no SHA `8a732e4a953e8f8ad3b53ba72f9ec083df4c51bb` e gerou o artifact `vr-display-debug-apk`.
 - Builds posteriores identificaram erro de compilação em `CameraPreview.kt`: import incorreto de `toBitmap`. A API é um método de instância de `ImageProxy` no CameraX 1.3+; o import foi removido no commit `b5295e05682ea0f5e85ca13a32552208a25ba033`.
 - **A correção ainda aguarda confirmação de um workflow concluído no SHA corrigido.** Não considerar o APK anterior como validação da versão atual.
+- O commit `2e900adda5a85250e49dc6f2aab05a279b9055fb` foi validado pelo CI: testes unitários e build debug aprovados; artifact `vr-display-debug-apk` ID `15184100341`.
 - Nenhum teste físico no Moto G52 foi confirmado.
 
 ## 9. Estado de validação

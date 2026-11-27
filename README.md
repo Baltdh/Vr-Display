@@ -185,6 +185,56 @@ Tarefas:
 
 Critério de conclusão: checklist aprovado, problemas conhecidos registrados e artefato correspondente ao commit final disponível.
 
+### Fase 8 — Plataforma de jogos VR: criação, biblioteca e loja própria
+
+**Visão de longo prazo:** transformar o Vr-Display também em uma plataforma de jogos VR, inspirada no modelo da Steam. O usuário poderá descobrir, instalar, organizar e executar jogos compatíveis e, futuramente, criar experiências/jogos dentro do próprio aplicativo e compartilhar ou publicar suas criações na loja da plataforma.
+
+Esta é uma expansão futura do produto. Não deve atrasar a estabilização do visualizador VR, câmera, controles e ARCore. A arquitetura deve, porém, evitar decisões que impeçam essa evolução.
+
+#### 8.1 — Biblioteca e launcher de jogos
+- Criar uma biblioteca local de jogos e experiências instaladas.
+- Exibir capa, título, descrição, versão, tamanho, requisitos, compatibilidade e controles.
+- Iniciar jogos instalados e permitir favoritos, categorias, pesquisa e histórico.
+- Reconhecer formatos/pacotes de jogos definidos pelo projeto, sem executar arquivos arbitrários.
+- Permitir importação local de pacotes confiáveis, com validação de integridade e permissões.
+
+#### 8.2 — Loja online estilo Steam
+- Criar catálogo remoto com páginas de jogos, imagens, vídeos, descrição, desenvolvedor, versão, requisitos e avaliações.
+- Implementar contas/perfis de usuário, biblioteca vinculada à conta e sincronização, respeitando privacidade.
+- Permitir jogos gratuitos inicialmente; compras, pagamentos e divisão de receita só depois de análise jurídica, fiscal, operacional e das políticas das lojas/plataformas.
+- Oferecer download, instalação, atualização, pausa/retomada e remoção de jogos.
+- Ter canais de lançamento (estável/beta), changelog, verificação de assinatura/hash e rollback quando tecnicamente possível.
+- Criar ferramentas de denúncia, moderação, classificação etária e proteção contra conteúdo malicioso.
+- Projetar backend e API com autenticação segura, autorização por usuário, rate limits, logs sem dados sensíveis e proteção contra abuso.
+
+#### 8.3 — Criador de jogos dentro do Vr-Display
+- Desenvolver um modo **Criar** dentro do aplicativo, começando por modelos prontos e experiências simples.
+- Oferecer editor visual de cenas com objetos, textos, imagens, áudio, posicionamento, escala e interação por controle/toque.
+- Permitir configurar câmera, movimento, colisões, gatilhos e lógica simples por blocos ou eventos, sem exigir programação para projetos básicos.
+- Incluir pré-visualização imediata em tela única e VR SBS.
+- Permitir salvar projetos, duplicar modelos, exportar pacotes e testar localmente.
+- Evoluir gradualmente para scripts/API para desenvolvedores avançados, documentação e SDK.
+- Separar editor, runtime de jogos e serviços da loja; um jogo não deve executar com privilégios do aplicativo principal.
+
+#### 8.4 — Runtime e compatibilidade
+- Definir um formato de pacote versionado para jogos, com manifesto, assets, versão mínima do runtime, resolução/modo de visualização, controles e permissões declaradas.
+- Criar runtime isolado com APIs limitadas para gráficos, áudio, input, armazenamento do jogo e recursos VR/AR.
+- Avaliar engine própria leve e/ou integração com engine existente; tomar a decisão por protótipos, tamanho do APK, desempenho, licença e compatibilidade ARM64.
+- Não permitir código nativo arbitrário ou acesso irrestrito ao sistema em jogos baixados.
+- Aplicar limites de memória, tempo de execução, acesso a arquivos e permissões; interromper jogos que travem ou excedam limites.
+- Suportar primeiro jogos 3D simples e experiências VR Cardboard/SBS; expandir para AR e dispositivos mais potentes conforme capacidade.
+
+#### 8.5 — Publicação e comunidade
+- Criar fluxo para validar, testar e enviar jogos à loja.
+- Exigir assinatura dos pacotes e verificação de integridade no download.
+- Ter página do desenvolvedor, versões, notas de atualização, avaliações e política de conteúdo.
+- Planejar revisão/moderação antes da publicação pública.
+- Fornecer documentação, templates e SDK para criadores externos.
+
+**Critérios para considerar esta fase concluída:** biblioteca local funcional; formato de pacote e runtime documentados; protótipo de criação que salva e executa um projeto simples; catálogo remoto com download/atualização segura; e processo de publicação/moderação definido. Loja com pagamentos e distribuição pública é uma etapa posterior e não deve ser simulada com dados fictícios.
+
+**Dependências e ordem recomendada:** concluir as fases 0–4 primeiro. Em paralelo, elaborar protótipo técnico do runtime e do formato de pacote após a fase 4. Construir o criador e a biblioteca local antes de implementar contas, backend e loja online. Só depois abrir publicação para terceiros.
+
 ## 5. Regras técnicas e limites de plataforma
 
 - Não exigir root.

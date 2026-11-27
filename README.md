@@ -36,7 +36,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - Controles visuais iniciais de separação, zoom, deslocamento horizontal/vertical e rotação.
 - Pipeline CameraX com ImageAnalysis, estratégia `KEEP_ONLY_LATEST`, resolução-alvo 640×480, correção de rotação e limitação aproximada da atualização a 15 fps.
 - Composição do mesmo frame nas duas regiões SBS.
-- Diagnóstico inicial de eventos de tecla para controle Bluetooth e teclado.
+- Diagnóstico de eventos KeyEvent para controle Bluetooth/teclado e GenericMotionEvent para mouse/trackpad/joystick, com identificação do dispositivo, origem e throttling de movimento.
 - Painel de verificação de disponibilidade e solicitação de instalação do ARCore.
 - Workflow GitHub Actions para compilar APK debug.
 - Documentação de arquitetura e instruções para agentes.
@@ -47,7 +47,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
 - O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
 - O painel ARCore é somente preflight. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
-- Diagnóstico de KeyEvents não é ainda um sistema completo de mapeamento configurável.
+- Diagnóstico de KeyEvents/GenericMotionEvent identifica eventos e dispositivos, mas ainda não é um sistema completo de mapeamento configurável.
 - Teclado e mouse OTG dependem dos eventos Android padrão; ainda precisam de testes físicos.
 - Não há ainda um sistema de painéis capaz de hospedar livremente qualquer aplicativo Android.
 - Não há validação física confirmada nem APK de distribuição aprovado.

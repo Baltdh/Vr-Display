@@ -1,5 +1,6 @@
 package com.baltdh.vrdisplay
 
+import android.app.Activity
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.KeyEvent
@@ -8,14 +9,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
@@ -64,10 +71,27 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun VrDisplayHome(lastInput: String) {
-    val context = LocalContext.current.applicationContext
+    val localContext = LocalContext.current
+    val activity = localContext as? Activity
+    val context = localContext.applicationContext
     var cameraVisible by remember { mutableStateOf(false) }
+    var immersiveMode by remember { mutableStateOf(false) }
     var sideBySide by remember { mutableStateOf(true) }
     var frontCamera by remember { mutableStateOf(false) }
+
+    SideEffect {
+        val window = activity?.window
+        if (window != null) {
+            val controller = WindowCompat.getInsetsController(window, window.decorView)
+            if (immersiveMode) {
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+            } else {
+                controller.show(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+    }
     var calibration by remember { mutableStateOf(CalibrationSettings()) }
     var calibrationLoaded by remember { mutableStateOf(false) }
 
@@ -84,14 +108,35 @@ private fun VrDisplayHome(lastInput: String) {
 
     val cameraPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted -> cameraVisible = granted }
+    ) { granted ->
+        cameraVisible = granted
+        immersiveMode = granted
+    }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+    if (cameraVisible && immersiveMode) {
+        Box(Modifier.fillMaxSize().background(Color.Black)) {
+            CameraPreviewPanel(
+                sideBySide, frontCamera, calibration.ipd, calibration.zoom,
+                calibration.horizontal, calibration.vertical, calibration.rotation,
+                immersive = true
+            ) {
+                cameraVisible = false
+                immersiveMode = false
+            }
+            TextButton(
+                onClick = {
+                    cameraVisible = false
+                    immersiveMode = false
+                },
+                modifier = Modifier.align(Alignment.TopEnd).padding(12.dp)
+            ) { Text("Sair do VR") }
+        }
+    } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         Text("Vr-Display", style = MaterialTheme.typography.headlineMedium)
         Text("VR Box / Cardboard • modo experimental", color = MaterialTheme.colorScheme.secondary)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { cameraPermission.launch(android.Manifest.permission.CAMERA) }) { Text("Abrir câmera VR") }
+            Button(onClick = { cameraPermission.launch(android.Manifest.permission.CAMERA) }) { Text("Iniciar visualização VR") }
             OutlinedButton(onClick = { sideBySide = !sideBySide }) { Text(if (sideBySide) "Modo SBS" else "Tela única") }
             OutlinedButton(onClick = { frontCamera = !frontCamera }) { Text(if (frontCamera) "Frontal" else "Traseira") }
         }

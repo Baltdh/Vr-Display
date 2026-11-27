@@ -302,6 +302,8 @@ O agente deve atuar como colaborador técnico contínuo, não como gerador de um
 
 - [Guia de continuidade para agentes](AGENTS.md)
 - [Arquitetura técnica](docs/ARCHITECTURE.md)
+- [Vr-Worlds — especificação da plataforma de criação e jogos](docs/GAME_PLATFORM.md)
+- [Manifesto de exemplo de uma experiência](docs/examples/vrworld.manifest.json)
 - [Código-fonte](app/src/main/java/com/baltdh/vrdisplay/)
 - [GitHub Actions](.github/workflows/android.yml)
 

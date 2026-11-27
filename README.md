@@ -43,7 +43,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 
 ### Parcial, provisório ou ainda não validado
 
-- Os ajustes ópticos atuais são estado de interface; ainda precisam de persistência e perfis.
+- Os ajustes ópticos são persistidos localmente com Preferences DataStore; perfis nomeados de headset ainda não foram implementados.
 - A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
 - O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
 - O painel ARCore é somente preflight. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
@@ -259,6 +259,7 @@ Esta é uma expansão futura do produto. Não deve atrasar a estabilização do 
 - minSdk 26
 - CameraX 1.4.1
 - ARCore 1.57.0
+- Preferences DataStore 1.1.1
 
 Build local:
 ```bash
@@ -308,6 +309,8 @@ O agente deve atuar como colaborador técnico contínuo, não como gerador de um
 - [GitHub Actions](.github/workflows/android.yml)
 
 ### Registro da validação atual — 2026-11-27
+
+- Foi adicionada persistência local dos cinco parâmetros de calibração (separação visual, zoom, deslocamentos horizontal/vertical e rotação), com gravação debounced para evitar escrita a cada movimento do slider. O build correspondente ainda precisa ser confirmado.
 
 - O commit `aa14e2e5abe4e9a89f476a3e6aa07d00afee3328` concluiu o GitHub Actions com sucesso e gerou `vr-display-debug-apk` (artifact 15181594625; SHA-256 `026ae60b5c7b79e37160ac497c99c1b20301f35ef89baf064115ed69cf21b6a2`). Esse build valida somente aquele commit.
 - Após a confirmação do build, `CameraPreview.kt` recebeu uma revisão do lifecycle: descarte sinalizado atomicamente, descarte do analyzer, desvinculação apenas do use case do painel, atualização de UI protegida contra callbacks tardios e throttling com relógio monotônico. A validação CI dessa revisão ainda está pendente.

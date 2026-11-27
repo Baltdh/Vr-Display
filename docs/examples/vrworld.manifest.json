@@ -1,0 +1,30 @@
+{
+  "format": "vrworld",
+  "formatVersion": 1,
+  "experience": {
+    "id": "local.example.room",
+    "title": "Sala de demonstração",
+    "version": "0.1.0",
+    "creator": "Local user",
+    "description": "Primeiro mundo de demonstração offline."
+  },
+  "runtime": {
+    "minimumVersion": "0.1.0",
+    "entryScene": "scenes/main.json",
+    "supportedModes": ["flat", "vr-sbs"],
+    "orientation": "landscape"
+  },
+  "permissions": [],
+  "limits": {
+    "maxPackageBytes": 52428800,
+    "maxSceneObjects": 250,
+    "maxTextureDimension": 2048
+  },
+  "assets": [
+    {
+      "path": "scenes/main.json",
+      "type": "scene",
+      "sha256": "REPLACE_WITH_REAL_SHA256"
+    }
+  ]
+}

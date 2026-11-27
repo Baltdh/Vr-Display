@@ -34,7 +34,7 @@ Antes de qualquer mudança, leia README.md, este arquivo, docs/ARCHITECTURE.md, 
 - ARCore precisa ser verificado em runtime e ter fallback.
 
 ## Persistência e preferências
-- Manter `CalibrationSettings` como modelo central dos ajustes ópticos.
+- Manter `CalibrationSettings` como modelo central dos ajustes ópticos e `CalibrationProfileState` como contêiner dos perfis nomeados (máximo 20).
 - Persistir preferências com DataStore; não gravar no armazenamento em cada evento de movimento do slider (usar debounce).
 - Validar/normalizar valores ao carregar e salvar; manter defaults seguros para instalações novas.
 

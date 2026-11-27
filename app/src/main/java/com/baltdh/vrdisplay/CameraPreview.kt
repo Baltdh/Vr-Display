@@ -5,7 +5,7 @@ import android.graphics.Matrix
 import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ProcessCameraProvider
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.core.toBitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
@@ -37,12 +37,16 @@ fun CameraPreviewPanel(
     val lifecycleOwner = LocalLifecycleOwner.current
     var frame by remember { mutableStateOf<Bitmap?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
-    val executor = remember { Executors.newSingleThreadExecutor() }
+    val executor = remember(frontCamera) { Executors.newSingleThreadExecutor() }
     val lastFrameAt = remember { AtomicLong(0L) }
 
     DisposableEffect(lifecycleOwner, frontCamera) {
         val future = ProcessCameraProvider.getInstance(context)
+        var activeProvider: ProcessCameraProvider? = null
+        var activeAnalysis: ImageAnalysis? = null
+        var disposed = false
         val listener = Runnable {
+            if (disposed) return@Runnable
             try {
                 val provider = future.get()
                 val analysis = ImageAnalysis.Builder()
@@ -69,13 +73,16 @@ fun CameraPreviewPanel(
                 val selector = if (frontCamera) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
                 provider.unbind(analysis)
                 provider.bindToLifecycle(lifecycleOwner, selector, analysis)
+                activeProvider = provider
+                activeAnalysis = analysis
             } catch (t: Throwable) {
                 error = t.message ?: "Não foi possível iniciar a câmera"
             }
         }
         future.addListener(listener, ContextCompat.getMainExecutor(context))
         onDispose {
-            try { if (future.isDone) future.get().unbindAll() } catch (_: Throwable) { }
+            disposed = true
+            try { activeAnalysis?.let { activeProvider?.unbind(it) } } catch (_: Throwable) { }
             executor.shutdown()
             frame = null
         }

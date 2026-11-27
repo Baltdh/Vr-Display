@@ -187,7 +187,7 @@ Critério de conclusão: checklist aprovado, problemas conhecidos registrados e 
 
 ### Fase 8 — Plataforma de jogos VR: criação, biblioteca e loja própria
 
-**Visão de longo prazo:** transformar o Vr-Display também em uma plataforma de jogos VR, inspirada no modelo da Steam. O usuário poderá descobrir, instalar, organizar e executar jogos compatíveis e, futuramente, criar experiências/jogos dentro do próprio aplicativo e compartilhar ou publicar suas criações na loja da plataforma.
+**Visão de longo prazo:** transformar o Vr-Display também em uma plataforma própria de criação e distribuição de jogos VR, com biblioteca e loja online. O usuário poderá descobrir, instalar, organizar e executar jogos compatíveis e, futuramente, criar experiências/jogos dentro do próprio aplicativo e compartilhar ou publicar suas criações na loja da plataforma.
 
 Esta é uma expansão futura do produto. Não deve atrasar a estabilização do visualizador VR, câmera, controles e ARCore. A arquitetura deve, porém, evitar decisões que impeçam essa evolução.
 

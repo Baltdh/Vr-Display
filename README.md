@@ -39,6 +39,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - Pipeline CameraX com ImageAnalysis, estratégia `KEEP_ONLY_LATEST`, resolução-alvo 640×480, correção de rotação e limitação aproximada da atualização a 15 fps.
 - Composição do mesmo frame nas duas regiões SBS.
 - Diagnóstico de eventos KeyEvent para controle Bluetooth/teclado e GenericMotionEvent para mouse/trackpad/joystick, com identificação do dispositivo, origem e throttling de movimento.
+- Mapeamento configurável de seis ações (confirmar, voltar, cima, baixo, esquerda e direita), com captura da próxima tecla pressionada, persistência local e prevenção de teclas duplicadas por troca automática.
 - Painel de verificação de disponibilidade e solicitação de instalação do ARCore.
 - Workflow GitHub Actions para compilar APK debug.
 - Documentação de arquitetura e instruções para agentes.
@@ -49,7 +50,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
 - O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
 - O painel ARCore é somente preflight. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
-- Diagnóstico de KeyEvents/GenericMotionEvent identifica eventos e dispositivos, mas ainda não é um sistema completo de mapeamento configurável.
+- O mapeamento atual cobre teclas físicas e ações básicas: confirmar alterna SBS/tela única, voltar sai do visualizador imersivo e direções ajustam finamente a posição horizontal/vertical. Mouse e eixos analógicos ainda estão apenas no diagnóstico.
 - Teclado e mouse OTG dependem dos eventos Android padrão; ainda precisam de testes físicos.
 - Não há ainda um sistema de painéis capaz de hospedar livremente qualquer aplicativo Android.
 - Não há validação física confirmada nem APK de distribuição aprovado.
@@ -118,10 +119,10 @@ Objetivo: permitir operação sem tocar no celular dentro do headset.
 Tarefas:
 1. Mapear KeyEvents: keyCode, scanCode, ação, repetição e dispositivo de origem.
 2. Criar tela de diagnóstico com leitura em tempo real.
-3. Implementar mapeamento configurável para ações do app.
-4. Suportar navegação por D-pad, confirmação, voltar, gatilhos e botões disponíveis.
+3. **Implementado parcialmente:** mapeamento configurável para confirmar, voltar e quatro direções, com captura por tecla pressionada e persistência DataStore.
+4. **Parcial:** D-pad/direções, confirmação e voltar estão mapeados; gatilhos e botões adicionais ainda precisam ser configuráveis.
 5. Detectar teclado e mouse por eventos padrão do Android.
-6. Oferecer sensibilidade, zonas mortas e opção de redefinir mapeamentos.
+6. Redefinição para o mapa padrão implementada; sensibilidade e zonas mortas para eixos analógicos ainda pendentes.
 7. Evitar interceptar teclas necessárias ao sistema e manter acessibilidade.
 
 Critério de conclusão: controle Bluetooth, teclado e mouse OTG testados no aparelho-alvo, com mapa de botões documentado. Não presumir que todos os controles usam os mesmos códigos.

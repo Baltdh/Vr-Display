@@ -34,6 +34,7 @@ fun CameraPreviewPanel(
     horizontal: Float,
     vertical: Float,
     rotation: Int,
+    immersive: Boolean = false,
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
@@ -125,13 +126,15 @@ fun CameraPreviewPanel(
         }
     }
 
-    Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Passthrough CameraX", style = MaterialTheme.typography.titleMedium)
-            TextButton(onClick = onClose) { Text("Fechar câmera") }
+    Column(if (immersive) Modifier.fillMaxSize() else Modifier.fillMaxWidth()) {
+        if (!immersive) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Passthrough CameraX", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = onClose) { Text("Fechar câmera") }
+            }
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        Canvas(Modifier.fillMaxWidth().height(220.dp)) {
+        Canvas(if (immersive) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(220.dp)) {
             val bitmap = frame?.asImageBitmap() ?: return@Canvas
             val eyes = if (sideBySide) 2 else 1
             val eyeWidth = size.width / eyes

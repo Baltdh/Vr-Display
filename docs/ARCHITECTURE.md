@@ -46,3 +46,10 @@ Componentes arquiteturais previstos:
 Segurança obrigatória: pacotes assinados, hash verificado, permissões explícitas, sandbox, limites de recursos e ausência de execução nativa arbitrária por padrão. Compras e pagamentos exigem análise posterior das regras legais, fiscais e das políticas de distribuição.
 
 Ordem recomendada: estabilizar fases 0–4; prototipar formato de pacote e runtime; desenvolver criador e biblioteca local; só depois desenvolver contas, backend, loja online, publicação e moderação. Consultar a Fase 8 do README para o escopo detalhado.
+
+
+## Vr-Worlds — plataforma de experiências criadas pela comunidade
+
+A visão é um ecossistema de criação e descoberta inspirado no Roblox: editor visual, runtime comum, biblioteca, catálogo, e em fases posteriores identidade, social e multiplayer. A especificação inicial e decisões em aberto estão em [`GAME_PLATFORM.md`](GAME_PLATFORM.md). O manifesto de exemplo está em [`examples/vrworld.manifest.json`](examples/vrworld.manifest.json).
+
+O primeiro protótipo será offline: criar uma sala, adicionar/transformar objetos, salvar/reabrir e executar em runtime separado, com preview flat/SBS. Não iniciar backend, pagamentos ou multiplayer neste marco. O runtime deve carregar apenas dados declarativos validados, com limites de recursos e sem executar código nativo arbitrário.

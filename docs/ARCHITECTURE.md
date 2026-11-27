@@ -57,7 +57,7 @@ O primeiro protótipo será offline: criar uma sala, adicionar/transformar objet
 
 ## Revisão do lifecycle CameraX — 2026-11-27
 
-A implementação atual do painel usa `AtomicBoolean` para sinalizar descarte entre a thread principal e o executor do analyzer. Atualizações de frame/erro são encaminhadas ao executor principal e ignoradas após descarte. No encerramento, o analyzer é limpo, somente o `ImageAnalysis` do painel é desvinculado e o executor é encerrado. O throttling usa `SystemClock.elapsedRealtime()` para não depender de alterações no relógio civil. A revisão aguarda build CI e teste físico; ela não comprova ainda ausência de vazamentos nem estabilidade no Moto G52.
+A implementação atual do painel usa `AtomicBoolean` para sinalizar descarte entre a thread principal e o executor do analyzer. Atualizações de frame/erro são encaminhadas ao executor principal e ignoradas após descarte. No encerramento, o analyzer é limpo, somente o `ImageAnalysis` do painel é desvinculado e o executor é encerrado. O throttling usa `SystemClock.elapsedRealtime()` para não depender de alterações no relógio civil. A revisão foi compilada no commit `2e900adda5a85250e49dc6f2aab05a279b9055fb`; o CI aprovou testes unitários e `assembleDebug`. Isso não comprova ausência de vazamentos nem estabilidade no Moto G52, que ainda exige teste físico.
 
 
 ## Persistência de calibração

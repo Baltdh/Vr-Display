@@ -307,6 +307,13 @@ O agente deve atuar como colaborador técnico contínuo, não como gerador de um
 - [Código-fonte](app/src/main/java/com/baltdh/vrdisplay/)
 - [GitHub Actions](.github/workflows/android.yml)
 
+### Registro da validação atual — 2026-11-27
+
+- Um build anterior da base restaurada concluiu com sucesso no SHA `8a732e4a953e8f8ad3b53ba72f9ec083df4c51bb` e gerou o artifact `vr-display-debug-apk`.
+- Builds posteriores identificaram erro de compilação em `CameraPreview.kt`: import incorreto de `toBitmap`. A API é um método de instância de `ImageProxy` no CameraX 1.3+; o import foi removido no commit `b5295e05682ea0f5e85ca13a32552208a25ba033`.
+- **A correção ainda aguarda confirmação de um workflow concluído no SHA corrigido.** Não considerar o APK anterior como validação da versão atual.
+- Nenhum teste físico no Moto G52 foi confirmado.
+
 ## 9. Estado de validação
 
 A validação deve sempre ser atualizada com evidências do commit correspondente:

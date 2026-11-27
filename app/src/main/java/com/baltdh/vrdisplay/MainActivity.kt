@@ -30,13 +30,49 @@ import kotlinx.coroutines.flow.first
 class MainActivity : ComponentActivity() {
     private var lastInput by mutableStateOf("Nenhum evento recebido")
     private var lastMotionUpdateAt = 0L
+    var inputMappings by mutableStateOf(InputMappingSettings())
+        private set
+    var pendingMappingAction by mutableStateOf<VrInputAction?>(null)
+        private set
+    var mappedActionEvent by mutableStateOf<Pair<VrInputAction, Long>?>(null)
+        private set
+    private var mappedEventSequence = 0L
+
+    fun armInputMapping(action: VrInputAction) {
+        pendingMappingAction = action
+    }
+
+    fun cancelInputMapping() {
+        pendingMappingAction = null
+    }
+
+    fun restoreInputMappings() {
+        inputMappings = InputMappingSettings.defaults()
+    }
+
+    fun loadInputMappings(settings: InputMappingSettings) {
+        inputMappings = settings
+    }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val action = if (event.action == KeyEvent.ACTION_DOWN) "DOWN" else "UP"
         val device = event.device?.name ?: "dispositivo desconhecido"
+        val pending = pendingMappingAction
+        if (event.action == KeyEvent.ACTION_DOWN && pending != null) {
+            inputMappings = inputMappings.withKey(pending, event.keyCode)
+            pendingMappingAction = null
+            lastInput = "Mapeado • ${pending.label} = ${inputKeyLabel(event.keyCode)} • device=$device"
+            return true
+        }
+        val mapped = inputMappings.actionFor(event.keyCode)
+        if (event.action == KeyEvent.ACTION_DOWN && mapped != null) {
+            mappedEventSequence += 1
+            mappedActionEvent = mapped to mappedEventSequence
+        }
+        val action = if (event.action == KeyEvent.ACTION_DOWN) "DOWN" else "UP"
+        val mappedText = mapped?.let { " • ação=${it.label}" } ?: ""
         lastInput = "$action • ${KeyEvent.keyCodeToString(event.keyCode)} • ${event.displayLabel} " +
             "• scan=${event.scanCode} • repeat=${event.repeatCount} " +
-            "• device=$device • source=0x${event.source.toString(16)}"
+            "• device=$device • source=0x${event.source.toString(16)}$mappedText"
         return super.dispatchKeyEvent(event)
     }
 
@@ -73,8 +109,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun VrDisplayHome(lastInput: String) {
     val localContext = LocalContext.current
-    val activity = localContext as? Activity
+    val activity = localContext as? MainActivity
     val context = localContext.applicationContext
+    val inputMappings = activity?.inputMappings ?: InputMappingSettings()
+    val pendingMappingAction = activity?.pendingMappingAction
+    var inputMappingsLoaded by remember { mutableStateOf(false) }
     var cameraVisible by remember { mutableStateOf(false) }
     var immersiveMode by remember { mutableStateOf(false) }
     var sideBySide by remember { mutableStateOf(true) }
@@ -104,6 +143,28 @@ private fun VrDisplayHome(lastInput: String) {
     LaunchedEffect(context) {
         profileState = CalibrationSettingsStore.observe(context).first()
         profilesLoaded = true
+        val savedMappings = InputMappingStore.observe(context).first()
+        activity?.loadInputMappings(savedMappings)
+        inputMappingsLoaded = true
+    }
+    LaunchedEffect(inputMappings, inputMappingsLoaded) {
+        if (inputMappingsLoaded) {
+            delay(350)
+            InputMappingStore.save(context, inputMappings)
+        }
+    }
+    LaunchedEffect(activity?.mappedActionEvent) {
+        val action = activity?.mappedActionEvent?.first
+        when (action) {
+            VrInputAction.BACK -> {
+                if (immersiveMode) {
+                    cameraVisible = false
+                    immersiveMode = false
+                }
+            }
+            VrInputAction.CONFIRM -> sideBySide = !sideBySide
+            else -> Unit
+        }
     }
     LaunchedEffect(profileState, profilesLoaded) {
         if (profilesLoaded) {
@@ -226,9 +287,39 @@ private fun VrDisplayHome(lastInput: String) {
             color = MaterialTheme.colorScheme.secondary
         )
         Spacer(Modifier.height(16.dp))
+        Text("Mapeamento de controle", style = MaterialTheme.typography.titleLarge)
+        Text(
+            pendingMappingAction?.let { "Aguardando tecla para: ${it.label}. Pressione um botão no controle ou teclado." }
+                ?: "Toque em uma ação e pressione o botão que deseja atribuir.",
+            color = if (pendingMappingAction != null) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.secondary,
+            style = MaterialTheme.typography.bodySmall
+        )
+        VrInputAction.entries.forEach { action ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(action.label, style = MaterialTheme.typography.bodyMedium)
+                    Text(inputKeyLabel(inputMappings.keyFor(action)), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary)
+                }
+                OutlinedButton(onClick = { activity?.armInputMapping(action) }) {
+                    Text(if (pendingMappingAction == action) "Aguardando..." else "Atribuir")
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = { activity?.restoreInputMappings() }) { Text("Restaurar padrão") }
+            if (pendingMappingAction != null) {
+                TextButton(onClick = { activity?.cancelInputMapping() }) { Text("Cancelar") }
+            }
+        }
         Text("Diagnóstico de entrada", style = MaterialTheme.typography.titleLarge)
         Text(lastInput, style = MaterialTheme.typography.bodyMedium)
-        Text("Pressione botões do controle Bluetooth, teclado ou mova o mouse OTG para identificar eventos e origem.")
+        Text("Mouse OTG e eixos analógicos continuam disponíveis no diagnóstico de eventos.")
         Spacer(Modifier.height(16.dp))
         ArCoreStatusPanel()
         Spacer(Modifier.height(20.dp))

@@ -6,7 +6,7 @@ Android nativo, Kotlin, Jetpack Compose/Material 3; JDK 17; compileSdk 35; minSd
 ## Componentes
 - UI: modos, calibração, permissões, status e diagnóstico.
 - CameraX passthrough: aquisição de frames, orientação, throttling e composição SBS.
-- Input: KeyEvents, controle Bluetooth, teclado e mouse OTG.
+- Input: KeyEvents e GenericMotionEvents, identificação de dispositivos, controle Bluetooth, teclado, mouse/trackpad OTG e joystick.
 - ARCore: disponibilidade/instalação, Session, tracking, Depth e renderer.
 - Settings: preferências e perfis por headset/dispositivo.
 
@@ -68,3 +68,8 @@ A implementação atual do painel usa `AtomicBoolean` para sinalizar descarte en
 ## Testes automatizados
 
 `CalibrationSettingsTest` verifica os valores padrão, limites aceitos e normalização da rotação. O workflow Android CI executa `:app:testDebugUnitTest` antes de `:app:assembleDebug`, de modo que regressões do modelo de calibração bloqueiem a geração do APK.
+
+
+## Diagnóstico de entrada
+
+A Activity intercepta `dispatchKeyEvent` para identificar teclas, scan code, repetição, dispositivo e source. `dispatchGenericMotionEvent` registra movimento, hover, scroll e botões de mouse/trackpad/joystick; movimentos contínuos são limitados a uma atualização visual a cada 100 ms para evitar recomposição excessiva. Isso é diagnóstico, não mapeamento de comandos nem garantia de compatibilidade com todos os controles.

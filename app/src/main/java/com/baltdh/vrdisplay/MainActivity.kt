@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.InputDevice
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.first
 class MainActivity : ComponentActivity() {
     private var lastInput by mutableStateOf("Nenhum evento recebido")
     private var lastMotionUpdateAt = 0L
+    private val joystickAxisMapper = JoystickAxisMapper()
     var inputMappings by mutableStateOf(InputMappingSettings())
         private set
     var pendingMappingAction by mutableStateOf<VrInputAction?>(null)
@@ -48,7 +50,7 @@ class MainActivity : ComponentActivity() {
     }
 
     fun restoreInputMappings() {
-        inputMappings = InputMappingSettings.defaults()
+        inputMappings = InputMappingSettings()
     }
 
     fun loadInputMappings(settings: InputMappingSettings) {
@@ -83,6 +85,20 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        val isJoystick = event.isFromSource(InputDevice.SOURCE_JOYSTICK) ||
+            event.isFromSource(InputDevice.SOURCE_GAMEPAD)
+        if (isJoystick && event.actionMasked == MotionEvent.ACTION_MOVE) {
+            val mapped = joystickAxisMapper.update(
+                x = event.getAxisValue(MotionEvent.AXIS_X),
+                y = event.getAxisValue(MotionEvent.AXIS_Y),
+                hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X),
+                hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
+            )
+            if (mapped != null) {
+                mappedEventSequence += 1
+                mappedActionEvent = mapped to mappedEventSequence
+            }
+        }
         val now = SystemClock.elapsedRealtime()
         val isContinuousMotion = event.actionMasked == MotionEvent.ACTION_MOVE ||
             event.actionMasked == MotionEvent.ACTION_HOVER_MOVE
@@ -97,7 +113,13 @@ class MainActivity : ComponentActivity() {
                 else -> "ACTION_${event.actionMasked}"
             }
             val device = event.device?.name ?: "dispositivo desconhecido"
-            lastInput = "$action • x=${"%.1f".format(event.x)} y=${"%.1f".format(event.y)} " +
+            val axes = if (isJoystick) {
+                " • stickX=${"%.2f".format(event.getAxisValue(MotionEvent.AXIS_X))}" +
+                    " stickY=${"%.2f".format(event.getAxisValue(MotionEvent.AXIS_Y))}" +
+                    " hatX=${"%.1f".format(event.getAxisValue(MotionEvent.AXIS_HAT_X))}" +
+                    " hatY=${"%.1f".format(event.getAxisValue(MotionEvent.AXIS_HAT_Y))}"
+            } else ""
+            lastInput = "$action • x=${"%.1f".format(event.x)} y=${"%.1f".format(event.y)} " + axes +
                 "• scrollX=${event.getAxisValue(MotionEvent.AXIS_HSCROLL)} " +
                 "scrollY=${event.getAxisValue(MotionEvent.AXIS_VSCROLL)} " +
                 "• buttons=${event.buttonState} • device=$device " +
@@ -337,7 +359,7 @@ private fun VrDisplayHome(lastInput: String) {
         }
         Text("Diagnóstico de entrada", style = MaterialTheme.typography.titleLarge)
         Text(lastInput, style = MaterialTheme.typography.bodyMedium)
-        Text("Mouse OTG e eixos analógicos continuam disponíveis no diagnóstico de eventos.")
+        Text("Joystick: stick analógico e HAT acionam as direções com zona morta de 0,45. Mouse OTG permanece no diagnóstico.")
         Spacer(Modifier.height(16.dp))
         ArCoreStatusPanel()
         Spacer(Modifier.height(20.dp))

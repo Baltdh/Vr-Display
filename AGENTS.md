@@ -17,7 +17,7 @@ Antes de qualquer mudança, leia README.md, este arquivo, docs/ARCHITECTURE.md, 
 - JDK 17, compileSdk 35, minSdk 26, AGP 8.7.3, Gradle 8.9.
 - Kotlin, Jetpack Compose, Material 3; CameraX 1.4.1; ARCore 1.57.0.
 - Solicitar permissões no contexto da ação do usuário.
-- Respeitar lifecycle; liberar analyzer, use cases, Session e executors.
+- Respeitar lifecycle; liberar analyzer, use cases, Session e executors. No CameraX, proteger callbacks tardios após descarte, fechar sempre ImageProxy em finally e desvincular somente os use cases pertencentes ao painel.
 - Não usar unbindAll() para encerrar apenas um painel.
 - Evitar concorrência CameraX/ARCore; coordenar a posse da câmera.
 - Fechar ImageProxy em finally.

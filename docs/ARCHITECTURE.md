@@ -53,3 +53,8 @@ Ordem recomendada: estabilizar fases 0–4; prototipar formato de pacote e runti
 A visão é um ecossistema próprio de criação e descoberta de experiências VR: editor visual, runtime comum, biblioteca, catálogo e, em fases posteriores, identidade, recursos sociais e multiplayer. A especificação inicial e decisões em aberto estão em [`GAME_PLATFORM.md`](GAME_PLATFORM.md). O manifesto de exemplo está em [`examples/vrworld.manifest.json`](examples/vrworld.manifest.json).
 
 O primeiro protótipo será offline: criar uma sala, adicionar/transformar objetos, salvar/reabrir e executar em runtime separado, com preview flat/SBS. Não iniciar backend, pagamentos ou multiplayer neste marco. O runtime deve carregar apenas dados declarativos validados, com limites de recursos e sem executar código nativo arbitrário.
+
+
+## Revisão do lifecycle CameraX — 2026-11-27
+
+A implementação atual do painel usa `AtomicBoolean` para sinalizar descarte entre a thread principal e o executor do analyzer. Atualizações de frame/erro são encaminhadas ao executor principal e ignoradas após descarte. No encerramento, o analyzer é limpo, somente o `ImageAnalysis` do painel é desvinculado e o executor é encerrado. O throttling usa `SystemClock.elapsedRealtime()` para não depender de alterações no relógio civil. A revisão aguarda build CI e teste físico; ela não comprova ainda ausência de vazamentos nem estabilidade no Moto G52.

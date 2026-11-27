@@ -32,6 +32,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 
 - Projeto Android com Kotlin, Jetpack Compose e Material 3.
 - Tela inicial com alternância entre SBS e tela única.
+- Visualizador de câmera em tela cheia para VR, com ocultação das barras do sistema e saída explícita.
 - Seleção inicial entre câmera frontal e traseira.
 - Controles visuais iniciais de separação, zoom, deslocamento horizontal/vertical e rotação.
 - Pipeline CameraX com ImageAnalysis, estratégia `KEEP_ONLY_LATEST`, resolução-alvo 640×480, correção de rotação e limitação aproximada da atualização a 15 fps.

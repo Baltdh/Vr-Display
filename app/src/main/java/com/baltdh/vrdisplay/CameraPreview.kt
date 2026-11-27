@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -133,6 +135,20 @@ fun CameraPreviewPanel(
             val bitmap = frame?.asImageBitmap() ?: return@Canvas
             val eyes = if (sideBySide) 2 else 1
             val eyeWidth = size.width / eyes
+            if (eyeWidth <= 0f || size.height <= 0f) return@Canvas
+            val targetAspect = eyeWidth / size.height
+            val sourceAspect = bitmap.width.toFloat() / bitmap.height.toFloat()
+            val sourceOffset: IntOffset
+            val sourceSize: IntSize
+            if (sourceAspect > targetAspect) {
+                val cropWidth = (bitmap.height * targetAspect).toInt().coerceIn(1, bitmap.width)
+                sourceOffset = IntOffset((bitmap.width - cropWidth) / 2, 0)
+                sourceSize = IntSize(cropWidth, bitmap.height)
+            } else {
+                val cropHeight = (bitmap.width / targetAspect).toInt().coerceIn(1, bitmap.height)
+                sourceOffset = IntOffset(0, (bitmap.height - cropHeight) / 2)
+                sourceSize = IntSize(bitmap.width, cropHeight)
+            }
             for (eye in 0 until eyes) {
                 val centerX = eye * eyeWidth + eyeWidth / 2f
                 val centerY = size.height / 2f
@@ -150,10 +166,10 @@ fun CameraPreviewPanel(
                     )
                 }) {
                     drawImage(
-                        bitmap,
-                        dstSize = androidx.compose.ui.unit.IntSize(
-                            eyeWidth.toInt(), size.height.toInt()
-                        )
+                        image = bitmap,
+                        srcOffset = sourceOffset,
+                        srcSize = sourceSize,
+                        dstSize = IntSize(eyeWidth.toInt(), size.height.toInt())
                     )
                 }
             }

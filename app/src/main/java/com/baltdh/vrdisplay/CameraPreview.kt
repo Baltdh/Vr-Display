@@ -2,6 +2,7 @@ package com.baltdh.vrdisplay
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.os.SystemClock
 import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 @Composable
@@ -37,51 +39,85 @@ fun CameraPreviewPanel(
     var frame by remember { mutableStateOf<Bitmap?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     val executor = remember(frontCamera) { Executors.newSingleThreadExecutor() }
-    val lastFrameAt = remember { AtomicLong(0L) }
+    val lastFrameAt = remember(frontCamera) { AtomicLong(0L) }
 
-    DisposableEffect(lifecycleOwner, frontCamera) {
+    DisposableEffect(lifecycleOwner, frontCamera, executor) {
         val future = ProcessCameraProvider.getInstance(context)
+        val disposed = AtomicBoolean(false)
         var activeProvider: ProcessCameraProvider? = null
         var activeAnalysis: ImageAnalysis? = null
-        var disposed = false
+        val mainExecutor = ContextCompat.getMainExecutor(context)
+
+        error = null
         val listener = Runnable {
-            if (disposed) return@Runnable
+            if (disposed.get()) return@Runnable
+            var analysis: ImageAnalysis? = null
             try {
                 val provider = future.get()
-                val analysis = ImageAnalysis.Builder()
+                if (disposed.get()) return@Runnable
+
+                analysis = ImageAnalysis.Builder()
                     .setTargetResolution(Size(640, 480))
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
+
                 analysis.setAnalyzer(executor) { image ->
                     try {
-                        val now = System.currentTimeMillis()
-                        if (now - lastFrameAt.get() >= 66L) {
+                        val now = SystemClock.elapsedRealtime()
+                        if (!disposed.get() && now - lastFrameAt.get() >= 66L) {
                             lastFrameAt.set(now)
                             val source = image.toBitmap()
-                            val matrix = Matrix().apply { postRotate(image.imageInfo.rotationDegrees.toFloat()) }
-                            val corrected = Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
-                            ContextCompat.getMainExecutor(context).execute { frame = corrected }
+                            val matrix = Matrix().apply {
+                                postRotate(image.imageInfo.rotationDegrees.toFloat())
+                            }
+                            val corrected = Bitmap.createBitmap(
+                                source, 0, 0, source.width, source.height, matrix, true
+                            )
                             if (source !== corrected) source.recycle()
+
+                            mainExecutor.execute {
+                                if (!disposed.get()) frame = corrected
+                            }
                         }
                     } catch (t: Throwable) {
-                        ContextCompat.getMainExecutor(context).execute { error = t.message ?: "Falha ao processar imagem" }
+                        mainExecutor.execute {
+                            if (!disposed.get()) {
+                                error = t.message ?: "Falha ao processar imagem da câmera."
+                            }
+                        }
                     } finally {
                         image.close()
                     }
                 }
-                val selector = if (frontCamera) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
-                provider.unbind(analysis)
+
+                val selector = if (frontCamera) {
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                } else {
+                    CameraSelector.DEFAULT_BACK_CAMERA
+                }
                 provider.bindToLifecycle(lifecycleOwner, selector, analysis)
                 activeProvider = provider
                 activeAnalysis = analysis
             } catch (t: Throwable) {
-                error = t.message ?: "Não foi possível iniciar a câmera"
+                analysis?.clearAnalyzer()
+                if (!disposed.get()) {
+                    error = t.message ?: "Não foi possível iniciar a câmera."
+                }
             }
         }
-        future.addListener(listener, ContextCompat.getMainExecutor(context))
+
+        future.addListener(listener, mainExecutor)
+
         onDispose {
-            disposed = true
-            try { activeAnalysis?.let { activeProvider?.unbind(it) } } catch (_: Throwable) { }
+            disposed.set(true)
+            activeAnalysis?.let { useCase ->
+                try {
+                    useCase.clearAnalyzer()
+                    activeProvider?.unbind(useCase)
+                } catch (_: Throwable) {
+                    // A câmera pode já ter sido desvinculada pelo lifecycle.
+                }
+            }
             executor.shutdown()
             frame = null
         }
@@ -102,12 +138,23 @@ fun CameraPreviewPanel(
                 val centerY = size.height / 2f
                 val gap = if (sideBySide) ipd * eyeWidth * .12f else 0f
                 withTransform({
-                    translate(left = centerX - eyeWidth / 2f + if (eye == 0) gap else -gap, top = 0f)
+                    translate(
+                        left = centerX - eyeWidth / 2f + if (eye == 0) gap else -gap,
+                        top = 0f
+                    )
                     scale(zoom, zoom, pivot = Offset(eyeWidth / 2f, centerY))
                     rotate(rotation.toFloat(), pivot = Offset(eyeWidth / 2f, centerY))
-                    translate(left = horizontal * eyeWidth * .15f, top = vertical * size.height * .15f)
+                    translate(
+                        left = horizontal * eyeWidth * .15f,
+                        top = vertical * size.height * .15f
+                    )
                 }) {
-                    drawImage(bitmap, dstSize = androidx.compose.ui.unit.IntSize(eyeWidth.toInt(), size.height.toInt()))
+                    drawImage(
+                        bitmap,
+                        dstSize = androidx.compose.ui.unit.IntSize(
+                            eyeWidth.toInt(), size.height.toInt()
+                        )
+                    )
                 }
             }
         }

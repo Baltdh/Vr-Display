@@ -50,7 +50,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
 - O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
 - O painel ARCore é somente preflight. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
-- O mapeamento atual cobre teclas físicas e ações básicas: confirmar alterna SBS/tela única, voltar sai do visualizador imersivo e direções ajustam finamente a posição horizontal/vertical. Mouse e eixos analógicos ainda estão apenas no diagnóstico.
+- O mapeamento atual cobre teclas físicas e ações básicas: confirmar alterna SBS/tela única, voltar sai do visualizador imersivo e direções ajustam finamente a posição horizontal/vertical. Stick analógico e HAT do joystick acionam as direções com zona morta de 0,45; mouse OTG usa clique primário/secundário e roda vertical. Esses caminhos ainda precisam de teste físico.
 - Teclado e mouse OTG dependem dos eventos Android padrão; ainda precisam de testes físicos.
 - Não há ainda um sistema de painéis capaz de hospedar livremente qualquer aplicativo Android.
 - Não há validação física confirmada nem APK de distribuição aprovado.

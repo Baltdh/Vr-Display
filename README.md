@@ -29,7 +29,7 @@ O repositório anterior `Baltdh/VrBox-Display` foi excluído e não está dispon
 - preflight ARCore a ser reintroduzido.
 
 ### Ainda exige implementação/validação
-- persistência dos ajustes e perfis;
+- persistência dos ajustes e perfis (os controles atuais ainda ficam em memória);
 - seleção completa de câmera e tratamento de lifecycle em todos os cenários;
 - medição de desempenho no Moto G52 e otimização GPU/OpenGL;
 - criação de sessão ARCore, tracking e renderização 3D;

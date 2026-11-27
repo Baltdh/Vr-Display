@@ -49,6 +49,8 @@ Antes de qualquer mudança, leia README.md, este arquivo, docs/ARCHITECTURE.md, 
 5. Planejar renderer OpenGL eficiente.
 6. Implementar ARCore Session, tracking, renderização e Depth.
 7. Explorar painéis Android somente dentro das APIs permitidas.
+8. Planejar, sem antecipar a implementação da loja, a futura plataforma de jogos VR estilo Steam: runtime seguro, formato de pacote versionado, biblioteca local, criador visual no app e catálogo online. Seguir a Fase 8 do README; primeiro prototipar runtime/formato após estabilizar o renderer, depois editor e biblioteca local, e só então backend/loja.
+9. Nunca executar pacotes de jogos com acesso irrestrito ao sistema. Projetar sandbox, permissões declaradas, assinatura e verificação de integridade desde o primeiro protótipo.
 
 ## Definição de concluído
 Código, lifecycle/erros, build/testes pertinentes e documentação atualizados. Teste físico deve ser confirmado pelo usuário.

@@ -1,7 +1,7 @@
 # Vr-Worlds — especificação inicial da plataforma de experiências VR
 
 **Status:** proposta técnica inicial; não implementada no aplicativo.  
-**Objetivo:** evoluir o Vr-Display para uma plataforma de experiências criadas pela comunidade, inspirada no modelo de criação e descoberta do Roblox, com distribuição semelhante a uma loja de jogos.
+**Objetivo:** evoluir o Vr-Display para uma plataforma própria de criação, descoberta e compartilhamento de experiências VR, com editor integrado, runtime comum e distribuição por catálogo/loja.
 
 ## 1. Conceito do produto
 
@@ -62,7 +62,7 @@ O nome de trabalho para experiências é **Vr-Worlds**. O nome é provisório e 
 
 ## 4. Editor: primeira versão funcional
 
-A primeira versão não tentará competir com Unity, Unreal ou Roblox Studio. Deve provar o ciclo completo com baixo custo computacional:
+A primeira versão será um editor próprio, enxuto e otimizado para celulares. Deve provar o ciclo completo com baixo custo computacional:
 1. Criar projeto a partir de template.
 2. Adicionar e selecionar objetos.
 3. Mover, girar e redimensionar objetos.

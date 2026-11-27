@@ -32,6 +32,11 @@ Antes de qualquer mudança, leia README.md, este arquivo, docs/ARCHITECTURE.md, 
 - Depth API estima profundidade, não substitui visão estéreo.
 - ARCore precisa ser verificado em runtime e ter fallback.
 
+## Persistência e preferências
+- Manter `CalibrationSettings` como modelo central dos ajustes ópticos.
+- Persistir preferências com DataStore; não gravar no armazenamento em cada evento de movimento do slider (usar debounce).
+- Validar/normalizar valores ao carregar e salvar; manter defaults seguros para instalações novas.
+
 ## Qualidade
 - Consultar documentação oficial para APIs novas.
 - Fazer alterações pequenas e testáveis.

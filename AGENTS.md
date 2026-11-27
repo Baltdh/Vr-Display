@@ -39,7 +39,7 @@ Antes de qualquer mudança, leia README.md, este arquivo, docs/ARCHITECTURE.md, 
 - Validar/normalizar valores ao carregar e salvar; manter defaults seguros para instalações novas.
 
 ## Testes
-- Manter testes unitários para defaults e normalização de `CalibrationSettings`.
+- Manter testes unitários para defaults e normalização de `CalibrationSettings`, perfis e `InputMappingSettings`.
 - O CI deve executar `:app:testDebugUnitTest` antes de `:app:assembleDebug`.
 
 ## Qualidade

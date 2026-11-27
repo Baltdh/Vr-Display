@@ -8,7 +8,7 @@ import org.junit.Test
 class InputMappingSettingsTest {
     @Test
     fun defaultsMatchCommonDpadAndConfirmKeys() {
-        val settings = InputMappingSettings.defaults()
+        val settings = InputMappingSettings()
         assertEquals(VrInputAction.CONFIRM, settings.actionFor(KeyEvent.KEYCODE_DPAD_CENTER))
         assertEquals(VrInputAction.BACK, settings.actionFor(KeyEvent.KEYCODE_BACK))
         assertEquals(VrInputAction.UP, settings.actionFor(KeyEvent.KEYCODE_DPAD_UP))

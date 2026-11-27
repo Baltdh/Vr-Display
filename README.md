@@ -39,7 +39,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - Pipeline CameraX com ImageAnalysis, estratégia `KEEP_ONLY_LATEST`, resolução-alvo 640×480, correção de rotação e limitação aproximada da atualização a 15 fps.
 - Composição do mesmo frame nas duas regiões SBS.
 - Diagnóstico de eventos KeyEvent para controle Bluetooth/teclado e GenericMotionEvent para mouse/trackpad/joystick, com identificação do dispositivo, origem e throttling de movimento.
-- Mapeamento configurável de seis ações (confirmar, voltar, cima, baixo, esquerda e direita), com captura da próxima tecla pressionada, persistência local e prevenção de teclas duplicadas por troca automática.
+- Mapeamento configurável de seis ações (confirmar, voltar, cima, baixo, esquerda e direita), com captura da próxima tecla pressionada, persistência local, prevenção de teclas duplicadas por troca automática e descarte do KEY_UP da tecla capturada.
 - Painel de verificação de disponibilidade e solicitação de instalação do ARCore.
 - Workflow GitHub Actions para compilar APK debug.
 - Documentação de arquitetura e instruções para agentes.

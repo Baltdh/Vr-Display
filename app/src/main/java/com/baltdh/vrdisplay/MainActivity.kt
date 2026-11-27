@@ -1,7 +1,9 @@
 package com.baltdh.vrdisplay
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -18,26 +20,50 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
-    private var lastKey by mutableStateOf("Nenhum evento recebido")
+    private var lastInput by mutableStateOf("Nenhum evento recebido")
+    private var lastMotionUpdateAt = 0L
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        lastKey = "DOWN: keyCode=" + keyCode + " | " + (event?.displayLabel ?: "?") + " | scan=" + (event?.scanCode ?: 0)
-        return super.onKeyDown(keyCode, event)
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val action = if (event.action == KeyEvent.ACTION_DOWN) "DOWN" else "UP"
+        val device = event.device?.name ?: "dispositivo desconhecido"
+        lastInput = "$action • ${KeyEvent.keyCodeToString(event.keyCode)} • ${event.displayLabel} " +
+            "• scan=${event.scanCode} • repeat=${event.repeatCount} " +
+            "• device=$device • source=0x${event.source.toString(16)}"
+        return super.dispatchKeyEvent(event)
     }
 
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        lastKey = "UP: keyCode=" + keyCode + " | " + (event?.displayLabel ?: "?") + " | scan=" + (event?.scanCode ?: 0)
-        return super.onKeyUp(keyCode, event)
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        val isContinuousMotion = event.actionMasked == MotionEvent.ACTION_MOVE ||
+            event.actionMasked == MotionEvent.ACTION_HOVER_MOVE
+        if (!isContinuousMotion || now - lastMotionUpdateAt >= 100L) {
+            lastMotionUpdateAt = now
+            val action = when (event.actionMasked) {
+                MotionEvent.ACTION_HOVER_MOVE -> "HOVER"
+                MotionEvent.ACTION_MOVE -> "MOVE"
+                MotionEvent.ACTION_SCROLL -> "SCROLL"
+                MotionEvent.ACTION_BUTTON_PRESS -> "BUTTON_PRESS"
+                MotionEvent.ACTION_BUTTON_RELEASE -> "BUTTON_RELEASE"
+                else -> "ACTION_${event.actionMasked}"
+            }
+            val device = event.device?.name ?: "dispositivo desconhecido"
+            lastInput = "$action • x=${"%.1f".format(event.x)} y=${"%.1f".format(event.y)} " +
+                "• scrollX=${event.getAxisValue(MotionEvent.AXIS_HSCROLL)} " +
+                "scrollY=${event.getAxisValue(MotionEvent.AXIS_VSCROLL)} " +
+                "• buttons=${event.buttonState} • device=$device " +
+                "• source=0x${event.source.toString(16)}"
+        }
+        return super.dispatchGenericMotionEvent(event)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MaterialTheme { VrDisplayHome(lastKey = lastKey) } }
+        setContent { MaterialTheme { VrDisplayHome(lastInput = lastInput) } }
     }
 }
 
 @Composable
-private fun VrDisplayHome(lastKey: String) {
+private fun VrDisplayHome(lastInput: String) {
     val context = LocalContext.current.applicationContext
     var cameraVisible by remember { mutableStateOf(false) }
     var sideBySide by remember { mutableStateOf(true) }
@@ -113,9 +139,9 @@ private fun VrDisplayHome(lastKey: String) {
             color = MaterialTheme.colorScheme.secondary
         )
         Spacer(Modifier.height(16.dp))
-        Text("Diagnóstico do controle", style = MaterialTheme.typography.titleLarge)
-        Text(lastKey, style = MaterialTheme.typography.bodyMedium)
-        Text("Pressione botões no controle Bluetooth ou teclado para visualizar eventos.")
+        Text("Diagnóstico de entrada", style = MaterialTheme.typography.titleLarge)
+        Text(lastInput, style = MaterialTheme.typography.bodyMedium)
+        Text("Pressione botões do controle Bluetooth, teclado ou mova o mouse OTG para identificar eventos e origem.")
         Spacer(Modifier.height(16.dp))
         ArCoreStatusPanel()
         Spacer(Modifier.height(20.dp))

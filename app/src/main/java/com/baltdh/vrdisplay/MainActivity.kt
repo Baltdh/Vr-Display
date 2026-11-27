@@ -84,6 +84,11 @@ class MainActivity : ComponentActivity() {
         return super.dispatchKeyEvent(event)
     }
 
+    private fun emitMappedAction(action: VrInputAction) {
+        mappedEventSequence += 1
+        mappedActionEvent = action to mappedEventSequence
+    }
+
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
         val isJoystick = event.isFromSource(InputDevice.SOURCE_JOYSTICK) ||
             event.isFromSource(InputDevice.SOURCE_GAMEPAD)
@@ -95,9 +100,19 @@ class MainActivity : ComponentActivity() {
                 hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
             )
             if (mapped != null) {
-                mappedEventSequence += 1
-                mappedActionEvent = mapped to mappedEventSequence
+                emitMappedAction(mapped)
             }
+        }
+        val isMouse = event.isFromSource(InputDevice.SOURCE_MOUSE)
+        if (isMouse) {
+            val mouseAction = when (event.actionMasked) {
+                MotionEvent.ACTION_BUTTON_PRESS -> MouseInputMapper.fromButtons(event.buttonState)
+                MotionEvent.ACTION_SCROLL -> MouseInputMapper.fromScroll(
+                    event.getAxisValue(MotionEvent.AXIS_VSCROLL)
+                )
+                else -> null
+            }
+            if (mouseAction != null) emitMappedAction(mouseAction)
         }
         val now = SystemClock.elapsedRealtime()
         val isContinuousMotion = event.actionMasked == MotionEvent.ACTION_MOVE ||

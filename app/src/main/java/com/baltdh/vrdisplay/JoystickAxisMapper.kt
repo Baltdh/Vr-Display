@@ -10,8 +10,9 @@ class JoystickAxisMapper(private val deadZone: Float = DEFAULT_DEAD_ZONE) {
 
     private var activeAction: VrInputAction? = null
 
-    fun update(x: Float, y: Float, hatX: Float, hatY: Float): VrInputAction? {
-        val candidate = directionFromHat(hatX, hatY) ?: directionFromStick(x, y)
+    fun update(x: Float, y: Float, hatX: Float, hatY: Float, deadZone: Float = this.deadZone): VrInputAction? {
+        val safeDeadZone = if (deadZone.isFinite()) deadZone.coerceIn(0.1f, 0.9f) else this.deadZone
+        val candidate = directionFromHat(hatX, hatY) ?: directionFromStick(x, y, safeDeadZone)
         if (candidate == activeAction) return null
         activeAction = candidate
         return candidate
@@ -28,8 +29,8 @@ class JoystickAxisMapper(private val deadZone: Float = DEFAULT_DEAD_ZONE) {
         }
     }
 
-    private fun directionFromStick(x: Float, y: Float): VrInputAction? {
-        if (abs(x) < deadZone && abs(y) < deadZone) return null
+    private fun directionFromStick(x: Float, y: Float, threshold: Float): VrInputAction? {
+        if (abs(x) < threshold && abs(y) < threshold) return null
         return if (abs(x) >= abs(y)) {
             if (x < 0f) VrInputAction.LEFT else VrInputAction.RIGHT
         } else {

@@ -47,7 +47,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 ### Parcial, provisório ou ainda não validado
 
 - Os ajustes ópticos e até 20 perfis nomeados de headset são persistidos localmente com Preferences DataStore.
-- A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
+- A renderização CameraX usa Bitmap/Canvas como primeira etapa. O painel agora apresenta FPS medido, dimensões do frame e média do tempo de conversão/rotação em janelas de aproximadamente 1 segundo; esses dados permitem estabelecer baseline, mas ainda precisam ser observados no Moto G52.
 - O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
 - O painel ARCore verifica disponibilidade, solicita instalação/atualização e confirma automaticamente o retorno do fluxo de instalação pelo lifecycle. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
 - O mapeamento atual cobre teclas físicas e ações básicas: confirmar alterna SBS/tela única, voltar sai do visualizador imersivo e direções ajustam finamente a posição horizontal/vertical. Stick analógico e HAT do joystick acionam as direções com zona morta ajustável e histerese de liberação; amostras não finitas são descartadas com segurança. Mouse OTG usa clique primário/secundário e roda vertical. Esses caminhos ainda precisam de teste físico.
@@ -334,3 +334,12 @@ A validação deve sempre ser atualizada com evidências do commit correspondent
 - **Teste físico:** registrar aparelho, versão Android, cenário e resultado observado.
 
 Não apresentar nenhum desses níveis como equivalente aos demais.
+
+
+### Instrumentação de desempenho CameraX — 2026-11-28
+
+- Adicionado `CameraPerformanceMeter`, medidor sem dependência Android que agrega FPS e tempo médio de conversão/rotação por janela de aproximadamente 1 segundo.
+- O painel de câmera exibe FPS, dimensões reais do Bitmap processado e tempo médio de processamento. O indicador aparece tanto no modo de pré-visualização quanto no modo imersivo.
+- Foram adicionados testes unitários para cálculo da média, reinício da janela e normalização de duração inválida.
+- A métrica de processamento não representa a latência ponta a ponta da câmera até a tela. O valor não inclui exposição do sensor, fila interna, agendamento de UI nem apresentação do frame.
+- O baseline real depende de instalação e observação no Moto G52; CI valida somente lógica e compilação.

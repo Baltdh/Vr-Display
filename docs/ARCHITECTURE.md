@@ -83,3 +83,8 @@ A Activity intercepta `dispatchKeyEvent` para identificar teclas, scan code, rep
 ### Precisão da métrica de FPS
 
 O FPS da janela é calculado pelo número de intervalos entre frames ((N - 1) / tempo decorrido), não pelo número bruto de amostras dividido pelo tempo. Isso evita contar o próprio primeiro frame como um intervalo. A métrica continua sendo FPS de frames processados, não latência física de apresentação.
+
+
+## Backpressure e propriedade dos Bitmaps no preview
+
+O analyzer mantém no máximo um Bitmap pendente para publicação na UI. Se a thread principal estiver ocupada, um frame novo substitui o pendente anterior; somente esse Bitmap ainda não publicado é reciclado. A atualização da UI é agendada uma única vez e, ao terminar, verifica se chegou um frame mais recente. Bitmaps já atribuídos ao estado Compose não são reciclados manualmente, pois o desenho pode ainda estar usando o recurso; a liberação fica a cargo do ciclo de vida/GC quando não houver mais referências. Se a rotação falhar, o Bitmap fonte é reciclado antes de propagar o erro. No descarte, o analyzer é limpo, o use case é desvinculado, o executor é encerrado e o Bitmap pendente é liberado.

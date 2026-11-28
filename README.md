@@ -350,3 +350,13 @@ Não apresentar nenhum desses níveis como equivalente aos demais.
 - O cálculo usa o número de intervalos entre a primeira e a última amostra ((frames - 1) / tempo decorrido), evitando superestimar FPS em uma unidade por janela.
 - Testes cobrem janelas de 1 segundo, janelas consecutivas, timestamps repetidos e amostras de duração não finitas.
 - A implementação não representa latência física de apresentação; o teste no Moto G52 continua pendente.
+
+
+### Backpressure e segurança de memória do preview — 2026-11-28
+
+- Corrigido o import de `withTransform`, necessário às transformações do Canvas.
+- O preview agora mantém no máximo um Bitmap aguardando publicação na UI; frames pendentes obsoletos são substituídos e liberados.
+- Bitmaps já publicados no estado Compose não são reciclados manualmente, evitando invalidar uma imagem ainda em uso pelo desenho.
+- O Bitmap fonte é liberado mesmo quando a correção de rotação falha.
+- O teste de timestamps repetidos foi movido para dentro da classe de testes.
+- A compilação e os testes deste conjunto ainda dependem do CI; não há validação física no Moto G52.

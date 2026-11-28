@@ -50,9 +50,6 @@ class CameraPerformanceMeterTest {
     fun rejectsNonPositiveWindow() {
         CameraPerformanceMeter(windowDurationMs = 0L)
     }
-}
-
-    
     @Test
     fun repeatedTimestampsAreHandledWithoutDivisionByZero() {
         val meter = CameraPerformanceMeter(windowDurationMs = 1L)
@@ -61,3 +58,4 @@ class CameraPerformanceMeterTest {
         val snapshot = meter.recordFrame(101L, 3f, 640, 480)
         assertEquals(2_000f, requireNotNull(snapshot).framesPerSecond, 0.001f)
     }
+}

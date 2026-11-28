@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -25,6 +26,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 
 @Composable
 fun CameraPreviewPanel(
@@ -53,8 +55,32 @@ fun CameraPreviewPanel(
         var activeProvider: ProcessCameraProvider? = null
         var activeAnalysis: ImageAnalysis? = null
         val mainExecutor = ContextCompat.getMainExecutor(context)
+        val pendingFrame = AtomicReference<Bitmap?>(null)
+        val frameUpdateScheduled = AtomicBoolean(false)
+
+        fun schedulePendingFrameUpdate() {
+            if (disposed.get()) {
+                pendingFrame.getAndSet(null)?.recycle()
+                return
+            }
+            if (frameUpdateScheduled.compareAndSet(false, true)) {
+                mainExecutor.execute {
+                    try {
+                        val nextFrame = pendingFrame.getAndSet(null)
+                        if (nextFrame != null) {
+                            if (disposed.get()) nextFrame.recycle() else frame = nextFrame
+                        }
+                    } finally {
+                        frameUpdateScheduled.set(false)
+                        if (disposed.get()) pendingFrame.getAndSet(null)?.recycle()
+                        else if (pendingFrame.get() != null) schedulePendingFrameUpdate()
+                    }
+                }
+            }
+        }
 
         error = null
+        frame = null
         metrics = null
         val listener = Runnable {
             if (disposed.get()) return@Runnable
@@ -75,12 +101,17 @@ fun CameraPreviewPanel(
                             lastFrameAt.set(now)
                             val processingStartedAt = SystemClock.elapsedRealtime()
                             val source = image.toBitmap()
-                            val matrix = Matrix().apply {
-                                postRotate(image.imageInfo.rotationDegrees.toFloat())
+                            val corrected = try {
+                                val matrix = Matrix().apply {
+                                    postRotate(image.imageInfo.rotationDegrees.toFloat())
+                                }
+                                Bitmap.createBitmap(
+                                    source, 0, 0, source.width, source.height, matrix, true
+                                )
+                            } catch (t: Throwable) {
+                                source.recycle()
+                                throw t
                             }
-                            val corrected = Bitmap.createBitmap(
-                                source, 0, 0, source.width, source.height, matrix, true
-                            )
                             if (source !== corrected) source.recycle()
 
                             val processedAt = SystemClock.elapsedRealtime()
@@ -90,13 +121,16 @@ fun CameraPreviewPanel(
                                 width = corrected.width,
                                 height = corrected.height
                             )
-                            mainExecutor.execute {
-                                if (!disposed.get()) {
-                                    frame = corrected
-                                    if (snapshot != null) metrics = snapshot
-                                } else {
-                                    corrected.recycle()
+                            if (disposed.get()) {
+                                corrected.recycle()
+                            } else {
+                                pendingFrame.getAndSet(corrected)?.recycle()
+                                if (snapshot != null) {
+                                    mainExecutor.execute {
+                                        if (!disposed.get()) metrics = snapshot
+                                    }
                                 }
+                                schedulePendingFrameUpdate()
                             }
                         }
                     } catch (t: Throwable) {
@@ -139,6 +173,7 @@ fun CameraPreviewPanel(
                 }
             }
             executor.shutdown()
+            pendingFrame.getAndSet(null)?.recycle()
             frame = null
             metrics = null
         }

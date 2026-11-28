@@ -28,6 +28,12 @@ class JoystickAxisMapperTest {
         assertEquals(VrInputAction.RIGHT, mapper.update(0.9f, 0f, 0f, 0f))
     }
 
+    @Test fun customDeadZoneChangesStickSensitivity() {
+        val mapper = JoystickAxisMapper()
+        assertNull(mapper.update(0.3f, 0f, 0f, 0f, deadZone = 0.5f))
+        assertEquals(VrInputAction.RIGHT, mapper.update(0.3f, 0f, 0f, 0f, deadZone = 0.2f))
+    }
+
     @Test fun hatTakesPriorityOverStick() {
         assertEquals(VrInputAction.LEFT, JoystickAxisMapper().update(0.9f, 0f, -1f, 0f))
     }

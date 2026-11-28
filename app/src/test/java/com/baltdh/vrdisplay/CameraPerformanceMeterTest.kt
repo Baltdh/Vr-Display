@@ -30,7 +30,7 @@ class CameraPerformanceMeterTest {
         assertEquals(20f, requireNotNull(first).framesPerSecond, 0.001f)
 
         assertNull(meter.recordFrame(120L, 8f, 1280, 720))
-        val second = meter.recordFrame(220L, 10f, 1280, 720)
+        val second = meter.recordFrame(210L, 10f, 1280, 720)
         assertEquals(20f, requireNotNull(second).framesPerSecond, 0.001f)
         assertEquals(9f, second.averageProcessingMs, 0.001f)
         assertEquals(1280, second.width)

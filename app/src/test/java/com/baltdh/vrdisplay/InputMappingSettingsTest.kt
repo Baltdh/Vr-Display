@@ -19,7 +19,7 @@ class InputMappingSettingsTest {
 
     @Test
     fun remappingToUnusedKeyKeepsOtherBindings() {
-        val remapped = InputMappingSettings.defaults()
+        val remapped = InputMappingSettings()
             .withKey(VrInputAction.CONFIRM, KeyEvent.KEYCODE_BUTTON_A)
 
         assertEquals(KeyEvent.KEYCODE_BUTTON_A, remapped.keyFor(VrInputAction.CONFIRM))
@@ -29,7 +29,7 @@ class InputMappingSettingsTest {
 
     @Test
     fun assigningAnAlreadyUsedKeySwapsRatherThanDuplicates() {
-        val remapped = InputMappingSettings.defaults()
+        val remapped = InputMappingSettings()
             .withKey(VrInputAction.CONFIRM, KeyEvent.KEYCODE_DPAD_UP)
 
         assertEquals(KeyEvent.KEYCODE_DPAD_UP, remapped.keyFor(VrInputAction.CONFIRM))
@@ -39,7 +39,14 @@ class InputMappingSettingsTest {
     }
 
     @Test
+    fun analogDeadZoneIsNormalizedToSupportedRange() {
+        assertEquals(0.1f, InputMappingSettings(analogDeadZone = -2f).normalized().analogDeadZone)
+        assertEquals(0.9f, InputMappingSettings(analogDeadZone = 2f).normalized().analogDeadZone)
+        assertEquals(JoystickAxisMapper.DEFAULT_DEAD_ZONE, InputMappingSettings(analogDeadZone = Float.NaN).normalized().analogDeadZone)
+    }
+
+    @Test
     fun unmappedKeyReturnsNull() {
-        assertNull(InputMappingSettings.defaults().actionFor(KeyEvent.KEYCODE_UNKNOWN))
+        assertNull(InputMappingSettings().actionFor(KeyEvent.KEYCODE_UNKNOWN))
     }
 }

@@ -53,6 +53,10 @@ class MainActivity : ComponentActivity() {
         inputMappings = InputMappingSettings()
     }
 
+    fun setAnalogDeadZone(value: Float) {
+        inputMappings = inputMappings.copy(analogDeadZone = value).normalized()
+    }
+
     fun loadInputMappings(settings: InputMappingSettings) {
         inputMappings = settings
     }
@@ -97,7 +101,8 @@ class MainActivity : ComponentActivity() {
                 x = event.getAxisValue(MotionEvent.AXIS_X),
                 y = event.getAxisValue(MotionEvent.AXIS_Y),
                 hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X),
-                hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
+                hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y),
+                deadZone = inputMappings.analogDeadZone
             )
             if (mapped != null) {
                 emitMappedAction(mapped)
@@ -374,7 +379,13 @@ private fun VrDisplayHome(lastInput: String) {
         }
         Text("Diagnóstico de entrada", style = MaterialTheme.typography.titleLarge)
         Text(lastInput, style = MaterialTheme.typography.bodyMedium)
-        Text("Joystick: stick analógico e HAT acionam as direções com zona morta de 0,45. Mouse OTG permanece no diagnóstico.")
+        Text("Zona morta do analógico: " + "%.2f".format(inputMappings.analogDeadZone))
+        Slider(
+            value = inputMappings.analogDeadZone,
+            onValueChange = { activity?.setAnalogDeadZone(it) },
+            valueRange = 0.1f..0.9f
+        )
+        Text("Joystick: stick e HAT acionam as direções. Mouse OTG: clique esquerdo confirma, clique direito volta e roda navega.")
         Spacer(Modifier.height(16.dp))
         ArCoreStatusPanel()
         Spacer(Modifier.height(20.dp))

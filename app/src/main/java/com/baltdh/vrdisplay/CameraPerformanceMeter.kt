@@ -47,7 +47,7 @@ class CameraPerformanceMeter(
         if (elapsedMs < windowDurationMs || elapsedMs <= 0L) return null
 
         val snapshot = CameraPerformanceSnapshot(
-            framesPerSecond = frameCount * 1000f / elapsedMs,
+            framesPerSecond = (frameCount - 1).coerceAtLeast(0) * 1000f / elapsedMs,
             averageProcessingMs = (totalProcessingMs / frameCount).toFloat(),
             width = latestWidth,
             height = latestHeight

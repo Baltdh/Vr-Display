@@ -343,3 +343,10 @@ Não apresentar nenhum desses níveis como equivalente aos demais.
 - Foram adicionados testes unitários para cálculo da média, reinício da janela e normalização de duração inválida.
 - A métrica de processamento não representa a latência ponta a ponta da câmera até a tela. O valor não inclui exposição do sensor, fila interna, agendamento de UI nem apresentação do frame.
 - O baseline real depende de instalação e observação no Moto G52; CI valida somente lógica e compilação.
+
+
+### Correção da métrica de FPS — 2026-11-28
+
+- O cálculo usa o número de intervalos entre a primeira e a última amostra ((frames - 1) / tempo decorrido), evitando superestimar FPS em uma unidade por janela.
+- Testes cobrem janelas de 1 segundo, janelas consecutivas, timestamps repetidos e amostras de duração não finitas.
+- A implementação não representa latência física de apresentação; o teste no Moto G52 continua pendente.

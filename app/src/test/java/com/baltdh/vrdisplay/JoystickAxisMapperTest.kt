@@ -43,4 +43,36 @@ class JoystickAxisMapperTest {
         assertEquals(VrInputAction.RIGHT, mapper.update(0.9f, 0f, 0f, 0f))
         assertEquals(VrInputAction.UP, mapper.update(0f, -0.9f, 0f, 0f))
     }
+
+    @Test fun stickNoiseInsideReleaseBandDoesNotRetriggerDirection() {
+        val mapper = JoystickAxisMapper()
+        assertEquals(VrInputAction.RIGHT, mapper.update(0.46f, 0f, 0f, 0f))
+
+        assertNull(mapper.update(0.40f, 0f, 0f, 0f))
+        assertNull(mapper.update(0.34f, 0f, 0f, 0f))
+        assertNull(mapper.update(0.33f, 0f, 0f, 0f))
+        assertEquals(VrInputAction.RIGHT, mapper.update(0.46f, 0f, 0f, 0f))
+    }
+
+    @Test fun hatUsesSeparateReleaseThreshold() {
+        val mapper = JoystickAxisMapper()
+        assertEquals(VrInputAction.LEFT, mapper.update(0f, 0f, -0.6f, 0f))
+
+        assertNull(mapper.update(0f, 0f, -0.4f, 0f))
+        assertNull(mapper.update(0f, 0f, -0.34f, 0f))
+        assertEquals(VrInputAction.LEFT, mapper.update(0f, 0f, -0.6f, 0f))
+    }
+
+    @Test fun nonFiniteAxisSamplesAreIgnored() {
+        val mapper = JoystickAxisMapper()
+        assertNull(
+            mapper.update(
+                x = Float.NaN,
+                y = Float.POSITIVE_INFINITY,
+                hatX = Float.NaN,
+                hatY = Float.NEGATIVE_INFINITY
+            )
+        )
+        assertEquals(VrInputAction.RIGHT, mapper.update(0.8f, 0f, 0f, 0f))
+    }
 }

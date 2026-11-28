@@ -5,6 +5,7 @@ import android.view.KeyEvent
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,8 +27,11 @@ data class InputMappingSettings(
     val up: Int = KeyEvent.KEYCODE_DPAD_UP,
     val down: Int = KeyEvent.KEYCODE_DPAD_DOWN,
     val left: Int = KeyEvent.KEYCODE_DPAD_LEFT,
-    val right: Int = KeyEvent.KEYCODE_DPAD_RIGHT
+    val right: Int = KeyEvent.KEYCODE_DPAD_RIGHT,
+    val analogDeadZone: Float = JoystickAxisMapper.DEFAULT_DEAD_ZONE
 ) {
+    fun normalized(): InputMappingSettings = copy(analogDeadZone = if (analogDeadZone.isFinite()) analogDeadZone.coerceIn(0.1f, 0.9f) else JoystickAxisMapper.DEFAULT_DEAD_ZONE)
+
     fun keyFor(action: VrInputAction): Int = when (action) {
         VrInputAction.CONFIRM -> confirm
         VrInputAction.BACK -> back
@@ -68,16 +72,19 @@ data class InputMappingSettings(
 }
 
 object InputMappingStore {
+    private val deadZoneKey = floatPreferencesKey("input_analog_dead_zone")
     private fun key(action: VrInputAction) = intPreferencesKey("input_" + action.id)
 
     fun observe(context: Context): Flow<InputMappingSettings> =
-        context.inputMappingDataStore.data.map { prefs -> prefs.toSettings() }
+        context.inputMappingDataStore.data.map { prefs -> prefs.toSettings().normalized() }
 
     suspend fun save(context: Context, settings: InputMappingSettings) {
         context.inputMappingDataStore.edit { prefs ->
+            val safe = settings.normalized()
             VrInputAction.entries.forEach { action ->
-                prefs[key(action)] = settings.keyFor(action)
+                prefs[key(action)] = safe.keyFor(action)
             }
+            prefs[deadZoneKey] = safe.analogDeadZone
         }
     }
 
@@ -87,7 +94,8 @@ object InputMappingStore {
         up = this[key(VrInputAction.UP)] ?: KeyEvent.KEYCODE_DPAD_UP,
         down = this[key(VrInputAction.DOWN)] ?: KeyEvent.KEYCODE_DPAD_DOWN,
         left = this[key(VrInputAction.LEFT)] ?: KeyEvent.KEYCODE_DPAD_LEFT,
-        right = this[key(VrInputAction.RIGHT)] ?: KeyEvent.KEYCODE_DPAD_RIGHT
+        right = this[key(VrInputAction.RIGHT)] ?: KeyEvent.KEYCODE_DPAD_RIGHT,
+        analogDeadZone = this[deadZoneKey] ?: JoystickAxisMapper.DEFAULT_DEAD_ZONE
     )
 }
 

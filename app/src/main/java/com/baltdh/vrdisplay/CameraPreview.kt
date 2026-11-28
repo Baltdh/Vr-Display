@@ -9,11 +9,12 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -40,6 +41,7 @@ fun CameraPreviewPanel(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var frame by remember { mutableStateOf<Bitmap?>(null) }
+    var metrics by remember(frontCamera) { mutableStateOf<CameraPerformanceSnapshot?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     val executor = remember(frontCamera) { Executors.newSingleThreadExecutor() }
     val lastFrameAt = remember(frontCamera) { AtomicLong(0L) }
@@ -47,11 +49,13 @@ fun CameraPreviewPanel(
     DisposableEffect(lifecycleOwner, frontCamera, executor) {
         val future = ProcessCameraProvider.getInstance(context)
         val disposed = AtomicBoolean(false)
+        val performanceMeter = CameraPerformanceMeter()
         var activeProvider: ProcessCameraProvider? = null
         var activeAnalysis: ImageAnalysis? = null
         val mainExecutor = ContextCompat.getMainExecutor(context)
 
         error = null
+        metrics = null
         val listener = Runnable {
             if (disposed.get()) return@Runnable
             var analysis: ImageAnalysis? = null
@@ -69,6 +73,7 @@ fun CameraPreviewPanel(
                         val now = SystemClock.elapsedRealtime()
                         if (!disposed.get() && now - lastFrameAt.get() >= 66L) {
                             lastFrameAt.set(now)
+                            val processingStartedAt = SystemClock.elapsedRealtime()
                             val source = image.toBitmap()
                             val matrix = Matrix().apply {
                                 postRotate(image.imageInfo.rotationDegrees.toFloat())
@@ -78,8 +83,20 @@ fun CameraPreviewPanel(
                             )
                             if (source !== corrected) source.recycle()
 
+                            val processedAt = SystemClock.elapsedRealtime()
+                            val snapshot = performanceMeter.recordFrame(
+                                timestampMs = processedAt,
+                                processingMs = (processedAt - processingStartedAt).toFloat(),
+                                width = corrected.width,
+                                height = corrected.height
+                            )
                             mainExecutor.execute {
-                                if (!disposed.get()) frame = corrected
+                                if (!disposed.get()) {
+                                    frame = corrected
+                                    if (snapshot != null) metrics = snapshot
+                                } else {
+                                    corrected.recycle()
+                                }
                             }
                         }
                     } catch (t: Throwable) {
@@ -123,6 +140,7 @@ fun CameraPreviewPanel(
             }
             executor.shutdown()
             frame = null
+            metrics = null
         }
     }
 
@@ -134,45 +152,66 @@ fun CameraPreviewPanel(
             }
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
-        Canvas(if (immersive) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(220.dp)) {
-            val bitmap = frame?.asImageBitmap() ?: return@Canvas
-            val eyes = if (sideBySide) 2 else 1
-            val eyeWidth = size.width / eyes
-            if (eyeWidth <= 0f || size.height <= 0f) return@Canvas
-            val targetAspect = eyeWidth / size.height
-            val sourceAspect = bitmap.width.toFloat() / bitmap.height.toFloat()
-            val sourceOffset: IntOffset
-            val sourceSize: IntSize
-            if (sourceAspect > targetAspect) {
-                val cropWidth = (bitmap.height * targetAspect).toInt().coerceIn(1, bitmap.width)
-                sourceOffset = IntOffset((bitmap.width - cropWidth) / 2, 0)
-                sourceSize = IntSize(cropWidth, bitmap.height)
-            } else {
-                val cropHeight = (bitmap.width / targetAspect).toInt().coerceIn(1, bitmap.height)
-                sourceOffset = IntOffset(0, (bitmap.height - cropHeight) / 2)
-                sourceSize = IntSize(bitmap.width, cropHeight)
+        Box(if (immersive) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(220.dp)) {
+            Canvas(Modifier.fillMaxSize()) {
+                val bitmap = frame?.asImageBitmap() ?: return@Canvas
+                val eyes = if (sideBySide) 2 else 1
+                val eyeWidth = size.width / eyes
+                if (eyeWidth <= 0f || size.height <= 0f) return@Canvas
+                val targetAspect = eyeWidth / size.height
+                val sourceAspect = bitmap.width.toFloat() / bitmap.height.toFloat()
+                val sourceOffset: IntOffset
+                val sourceSize: IntSize
+                if (sourceAspect > targetAspect) {
+                    val cropWidth = (bitmap.height * targetAspect).toInt().coerceIn(1, bitmap.width)
+                    sourceOffset = IntOffset((bitmap.width - cropWidth) / 2, 0)
+                    sourceSize = IntSize(cropWidth, bitmap.height)
+                } else {
+                    val cropHeight = (bitmap.width / targetAspect).toInt().coerceIn(1, bitmap.height)
+                    sourceOffset = IntOffset(0, (bitmap.height - cropHeight) / 2)
+                    sourceSize = IntSize(bitmap.width, cropHeight)
+                }
+                for (eye in 0 until eyes) {
+                    val centerX = eye * eyeWidth + eyeWidth / 2f
+                    val centerY = size.height / 2f
+                    val gap = if (sideBySide) ipd * eyeWidth * .12f else 0f
+                    withTransform({
+                        translate(
+                            left = centerX - eyeWidth / 2f + if (eye == 0) gap else -gap,
+                            top = 0f
+                        )
+                        scale(zoom, zoom, pivot = Offset(eyeWidth / 2f, centerY))
+                        rotate(rotation.toFloat(), pivot = Offset(eyeWidth / 2f, centerY))
+                        translate(
+                            left = horizontal * eyeWidth * .15f,
+                            top = vertical * size.height * .15f
+                        )
+                    }) {
+                        drawImage(
+                            image = bitmap,
+                            srcOffset = sourceOffset,
+                            srcSize = sourceSize,
+                            dstSize = IntSize(eyeWidth.toInt(), size.height.toInt())
+                        )
+                    }
+                }
             }
-            for (eye in 0 until eyes) {
-                val centerX = eye * eyeWidth + eyeWidth / 2f
-                val centerY = size.height / 2f
-                val gap = if (sideBySide) ipd * eyeWidth * .12f else 0f
-                withTransform({
-                    translate(
-                        left = centerX - eyeWidth / 2f + if (eye == 0) gap else -gap,
-                        top = 0f
-                    )
-                    scale(zoom, zoom, pivot = Offset(eyeWidth / 2f, centerY))
-                    rotate(rotation.toFloat(), pivot = Offset(eyeWidth / 2f, centerY))
-                    translate(
-                        left = horizontal * eyeWidth * .15f,
-                        top = vertical * size.height * .15f
-                    )
-                }) {
-                    drawImage(
-                        image = bitmap,
-                        srcOffset = sourceOffset,
-                        srcSize = sourceSize,
-                        dstSize = IntSize(eyeWidth.toInt(), size.height.toInt())
+            metrics?.let { current ->
+                Surface(
+                    modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = "%.1f FPS • %dx%d • %.1f ms".format(
+                            current.framesPerSecond,
+                            current.width,
+                            current.height,
+                            current.averageProcessingMs
+                        ),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

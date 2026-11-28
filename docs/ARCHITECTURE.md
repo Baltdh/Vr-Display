@@ -22,7 +22,7 @@ Android nativo, Kotlin, Jetpack Compose/Material 3; JDK 17; compileSdk 35; minSd
 Duplicar o mesmo frame nos dois olhos é passthrough mono; não cria paralaxe nem profundidade binocular. O modo imersivo oculta as barras do sistema via WindowInsetsControllerCompat e mantém um comando explícito de saída.
 
 ## ARCore
-O preflight de disponibilidade/instalação não constitui uma Session ativa. A Session deve respeitar lifecycle, coordenar exclusividade da câmera com CameraX, tratar instalação/permissões/indisponibilidade, encerrar no pause/stop, verificar suporte a Depth e manter fallback.
+O painel de preflight consulta compatibilidade com `checkAvailabilityAsync()` e solicita instalação/atualização com `requestInstall(activity, true)`. Quando o retorno é `INSTALL_REQUESTED`, a Activity pode pausar durante o fluxo do Google Play Services para RA; no próximo `ON_RESUME`, o painel repete `requestInstall(activity, false)` para confirmar a conclusão ou exibir a falha. A confirmação de instalação não inicia uma Session. A implementação futura da Session deverá respeitar lifecycle, coordenar exclusividade da câmera com CameraX, tratar permissões/indisponibilidade, encerrar no pause/stop, verificar suporte a Depth e manter fallback. Referência: [ativar AR em um app Android](https://developers.google.com/ar/develop/java/enable-arcore).
 
 ## Captura e painéis
 MediaProjection exige autorização explícita e possui restrições. DRM/FLAG_SECURE pode impedir captura. Não existe mecanismo público universal para incorporar qualquer Activity externa em uma cena 3D. Implementar somente integrações permitidas.

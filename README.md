@@ -49,7 +49,7 @@ O agente que assumir o projeto deve preservar essa distinção e não inventar t
 - Os ajustes ópticos e até 20 perfis nomeados de headset são persistidos localmente com Preferences DataStore.
 - A renderização CameraX usa Bitmap/Canvas como primeira etapa; desempenho real ainda precisa ser medido no Moto G52.
 - O ciclo de vida da câmera precisa ser exercitado em abertura/fechamento repetidos, troca de câmera, rotação, pause/resume e perda de permissão.
-- O painel ARCore é somente preflight. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
+- O painel ARCore verifica disponibilidade, solicita instalação/atualização e confirma automaticamente o retorno do fluxo de instalação pelo lifecycle. Ainda não existe Session ARCore ativa, tracking, renderização 3D nem Depth API.
 - O mapeamento atual cobre teclas físicas e ações básicas: confirmar alterna SBS/tela única, voltar sai do visualizador imersivo e direções ajustam finamente a posição horizontal/vertical. Stick analógico e HAT do joystick acionam as direções com zona morta ajustável e histerese de liberação; amostras não finitas são descartadas com segurança. Mouse OTG usa clique primário/secundário e roda vertical. Esses caminhos ainda precisam de teste físico.
 - Teclado e mouse OTG dependem dos eventos Android padrão; ainda precisam de testes físicos.
 - Não há ainda um sistema de painéis capaz de hospedar livremente qualquer aplicativo Android.

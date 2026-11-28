@@ -78,3 +78,8 @@ A Activity intercepta `dispatchKeyEvent` para identificar teclas, scan code, rep
 ## Instrumentação de desempenho CameraX
 
 `CameraPerformanceMeter` recebe amostras no único executor do `ImageAnalysis` e publica snapshots em janelas de 1 segundo: FPS efetivo dos frames aceitos pelo throttling, dimensões do Bitmap corrigido e média do tempo gasto em `ImageProxy.toBitmap()` mais correção de rotação. A UI apresenta esses dados no preview e no modo imersivo. A medição de processamento não é latência ponta a ponta: não inclui exposição, filas internas, agendamento de UI ou apresentação física. `CameraPerformanceMeterTest` cobre cálculo, janelas subsequentes e amostras de duração não finitas.
+
+
+### Precisão da métrica de FPS
+
+O FPS da janela é calculado pelo número de intervalos entre frames ((N - 1) / tempo decorrido), não pelo número bruto de amostras dividido pelo tempo. Isso evita contar o próprio primeiro frame como um intervalo. A métrica continua sendo FPS de frames processados, não latência física de apresentação.
